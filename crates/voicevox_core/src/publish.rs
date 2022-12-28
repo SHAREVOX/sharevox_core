@@ -356,10 +356,6 @@ impl InferenceCore {
             .as_mut()
             .ok_or(Error::UninitializedStatus)?;
 
-        if !status.validate_speaker_id(speaker_id) {
-            return Err(Error::InvalidSpeakerId { speaker_id });
-        }
-
         let library_uuid =
             if let Some(library_uuid) = status.get_library_uuid_from_speaker_id(speaker_id) {
                 library_uuid
@@ -418,10 +414,6 @@ impl InferenceCore {
     //         .as_mut()
     //         .ok_or(Error::UninitializedStatus)?;
 
-    //     if !status.validate_speaker_id(speaker_id) {
-    //         return Err(Error::InvalidSpeakerId { speaker_id });
-    //     }
-
     //     let (model_index, speaker_id) =
     //         if let Some((model_index, speaker_id)) = get_model_index_and_speaker_id(speaker_id) {
     //             (model_index, speaker_id)
@@ -475,10 +467,6 @@ impl InferenceCore {
     //         .status_option
     //         .as_mut()
     //         .ok_or(Error::UninitializedStatus)?;
-
-    //     if !status.validate_speaker_id(speaker_id) {
-    //         return Err(Error::InvalidSpeakerId { speaker_id });
-    //     }
 
     //     let (model_index, speaker_id) =
     //         if let Some((model_index, speaker_id)) = get_model_index_and_speaker_id(speaker_id) {

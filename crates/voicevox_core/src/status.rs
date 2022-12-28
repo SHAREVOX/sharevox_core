@@ -310,10 +310,6 @@ impl Status {
         Ok(session_builder.with_model_from_memory(model_bytes)?)
     }
 
-    pub fn validate_speaker_id(&self, speaker_id: u32) -> bool {
-        self.supported_styles.contains(&speaker_id)
-    }
-
     pub fn variance_session_run(
         &mut self,
         library_uuid: &str,
