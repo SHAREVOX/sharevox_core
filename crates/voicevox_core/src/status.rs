@@ -19,7 +19,6 @@ pub struct Status {
     root_dir_path: PathBuf,
     light_session_options: SessionOptions, // 軽いモデルはこちらを使う
     heavy_session_options: SessionOptions, // 重いモデルはこちらを使う
-    supported_styles: BTreeSet<u32>,
     libraries: Option<BTreeMap<String, bool>>,
     pub usable_libraries: BTreeSet<String>,
     usable_model_data_map: BTreeMap<String, ModelData>,
@@ -176,7 +175,6 @@ impl Status {
             root_dir_path: root_dir_path.to_path_buf(),
             light_session_options: SessionOptions::new(cpu_num_threads, false),
             heavy_session_options: SessionOptions::new(cpu_num_threads, use_gpu),
-            supported_styles: BTreeSet::default(),
             libraries: None,
             usable_libraries: BTreeSet::new(),
             usable_model_data_map: BTreeMap::new(),
@@ -184,19 +182,6 @@ impl Status {
             speaker_id_map: BTreeMap::new(),
             metas_str: String::new(),
         }
-    }
-
-    pub fn load_metas(&mut self) -> Result<()> {
-        let metas: Vec<Meta> =
-            serde_json::from_str(Self::METAS_STR).map_err(|e| Error::LoadMetas(e.into()))?;
-
-        for meta in metas.iter() {
-            for style in meta.styles().iter() {
-                self.supported_styles.insert(*style.id() as u32);
-            }
-        }
-
-        Ok(())
     }
 
     pub fn load(&mut self) -> Result<()> {
@@ -407,17 +392,6 @@ impl Status {
 //         assert!(status.models.predict_intonation.is_empty());
 //         assert!(status.models.decode.is_empty());
 //         assert!(status.supported_styles.is_empty());
-//     }
-//
-//     #[rstest]
-//     fn status_load_metas_works() {
-//         let mut status = Status::new(true, 0);
-//         let result = status.load_metas();
-//         assert_eq!(Ok(()), result);
-//         let mut expected = BTreeSet::new();
-//         expected.insert(0);
-//         expected.insert(1);
-//         assert_eq!(expected, status.supported_styles);
 //     }
 //
 //     #[rstest]

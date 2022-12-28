@@ -283,7 +283,6 @@ impl InferenceCore {
         if !use_gpu || self.can_support_gpu_feature()? {
             let mut status = Status::new(root_dir_path, use_gpu, cpu_num_threads);
 
-            status.load_metas()?;
             status.load()?;
 
             if load_all_models {
