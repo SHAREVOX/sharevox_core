@@ -24,7 +24,7 @@ pub struct Status {
     usable_model_data_map: BTreeMap<String, ModelData>,
     pub usable_model_map: BTreeMap<String, Models>,
     pub speaker_id_map: BTreeMap<u64, String>,
-    metas_str: String,
+    pub metas_str: String,
 }
 
 pub struct Models {
@@ -167,9 +167,6 @@ fn open_libraries(root_dir_path: &Path) -> Result<BTreeMap<String, bool>> {
 unsafe impl Send for Status {}
 
 impl Status {
-    pub const METAS_STR: &'static str =
-        include_str!(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/metas.json"));
-
     pub fn new(root_dir_path: &Path, use_gpu: bool, cpu_num_threads: u16) -> Self {
         Self {
             root_dir_path: root_dir_path.to_path_buf(),
