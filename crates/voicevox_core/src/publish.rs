@@ -345,7 +345,7 @@ impl InferenceCore {
             return status.metas_str.clone();
         }
 
-        return "".to_string();
+        "".to_string()
     }
 
     pub fn variance_forward(
