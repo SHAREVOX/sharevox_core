@@ -83,11 +83,11 @@ impl VoicevoxCore {
             .load_model(speaker_id)
     }
 
-    // pub fn is_model_loaded(&self, speaker_id: u32) -> bool {
-    //     self.synthesis_engine
-    //         .inference_core()
-    //         .is_model_loaded(speaker_id)
-    // }
+    pub fn is_model_loaded(&self, speaker_id: u32) -> bool {
+        self.synthesis_engine
+            .inference_core()
+            .is_model_loaded(speaker_id)
+    }
 
     pub fn finalize(&mut self) {
         self.synthesis_engine.inference_core_mut().finalize()
@@ -325,17 +325,17 @@ impl InferenceCore {
             Err(Error::UninitializedStatus)
         }
     }
-    // pub fn is_model_loaded(&self, speaker_id: u32) -> bool {
-    //     if let Some(status) = self.status_option.as_ref() {
-    //         if let Some((model_index, _)) = get_model_index_and_speaker_id(speaker_id) {
-    //             status.is_model_loaded(model_index)
-    //         } else {
-    //             false
-    //         }
-    //     } else {
-    //         false
-    //     }
-    // }
+    pub fn is_model_loaded(&self, speaker_id: u32) -> bool {
+        if let Some(status) = self.status_option.as_ref() {
+            if let Some(library_uuid) = status.get_library_uuid_from_speaker_id(speaker_id) {
+                status.is_model_loaded(&library_uuid)
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
     pub fn finalize(&mut self) {
         self.initialized = false;
         self.status_option = None;

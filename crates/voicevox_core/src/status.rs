@@ -265,11 +265,9 @@ impl Status {
         Ok(())
     }
 
-    // pub fn is_model_loaded(&self, model_index: usize) -> bool {
-    //     self.models.predict_intonation.contains_key(&model_index)
-    //         && self.models.predict_duration.contains_key(&model_index)
-    //         && self.models.decode.contains_key(&model_index)
-    // }
+    pub fn is_model_loaded(&self,  library_uuid: &str) -> bool {
+        self.usable_model_map.contains_key(library_uuid)
+    }
 
     fn new_session<B: AsRef<[u8]>>(
         &self,

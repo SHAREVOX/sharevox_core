@@ -51,10 +51,10 @@ pub extern "C" fn load_model(speaker_id: i64) -> bool {
     }
 }
 
-// #[no_mangle]
-// pub extern "C" fn is_model_loaded(speaker_id: i64) -> bool {
-//     lock_internal().is_model_loaded(speaker_id as u32)
-// }
+#[no_mangle]
+pub extern "C" fn is_model_loaded(speaker_id: i64) -> bool {
+    lock_internal().is_model_loaded(speaker_id as u32)
+}
 
 #[no_mangle]
 pub extern "C" fn finalize() {
