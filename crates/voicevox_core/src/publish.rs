@@ -97,7 +97,7 @@ impl VoicevoxCore {
         env!("CARGO_PKG_VERSION")
     }
 
-    pub fn get_metas_json(&mut self) -> CString {
+    pub fn get_metas_json(&mut self) -> &CString {
         self.synthesis_engine.inference_core_mut().metas()
     }
 
@@ -340,12 +340,13 @@ impl InferenceCore {
         self.status_option = None;
     }
 
-    pub fn metas(&mut self) -> CString {
+    pub fn metas(&mut self) -> &CString {
         if let Some(status) = self.status_option.as_mut() {
-            return status.metas_str.clone();
+            &status.metas_str
+        } else {
+            &EMPTY_METAS_CSTRING
         }
 
-        CString::new("").unwrap()
     }
 
     pub fn variance_forward(
@@ -570,6 +571,8 @@ impl InferenceCore {
     //         .collect()
     // }
 }
+
+pub static EMPTY_METAS_CSTRING: Lazy<CString> = Lazy::new(|| CString::new("").unwrap());
 
 pub static SUPPORTED_DEVICES: Lazy<SupportedDevices> =
     Lazy::new(|| SupportedDevices::get_supported_devices().unwrap());
