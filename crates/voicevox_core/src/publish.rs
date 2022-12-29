@@ -571,7 +571,6 @@ impl InferenceCore {
     // }
 }
 
-
 pub static SUPPORTED_DEVICES: Lazy<SupportedDevices> =
     Lazy::new(|| SupportedDevices::get_supported_devices().unwrap());
 
