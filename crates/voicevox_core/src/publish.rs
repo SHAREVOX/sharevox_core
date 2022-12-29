@@ -97,7 +97,7 @@ impl VoicevoxCore {
         env!("CARGO_PKG_VERSION")
     }
 
-    pub fn get_metas_json(&mut self) -> &CString {
+    pub fn get_metas_json(&mut self) -> &CStr {
         self.synthesis_engine.inference_core_mut().metas()
     }
 
