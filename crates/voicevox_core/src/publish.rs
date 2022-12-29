@@ -344,7 +344,7 @@ impl InferenceCore {
         if let Some(status) = self.status_option.as_mut() {
             &status.metas_str
         } else {
-            CStr::from_bytes_with_nul(b"\0").unwrap()
+            <&CStr>::default()
         }
     }
 
