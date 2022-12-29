@@ -265,7 +265,7 @@ impl Status {
         Ok(())
     }
 
-    pub fn is_model_loaded(&self,  library_uuid: &str) -> bool {
+    pub fn is_model_loaded(&self, library_uuid: &str) -> bool {
         self.usable_model_map.contains_key(library_uuid)
     }
 
