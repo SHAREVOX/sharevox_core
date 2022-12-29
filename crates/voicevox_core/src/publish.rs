@@ -346,7 +346,6 @@ impl InferenceCore {
         } else {
             &EMPTY_METAS_CSTRING
         }
-
     }
 
     pub fn variance_forward(
