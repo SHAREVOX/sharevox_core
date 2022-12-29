@@ -340,11 +340,11 @@ impl InferenceCore {
         self.status_option = None;
     }
 
-    pub fn metas(&mut self) -> &CString {
+    pub fn metas(&mut self) -> &CStr {
         if let Some(status) = self.status_option.as_mut() {
             &status.metas_str
         } else {
-            &EMPTY_METAS_CSTRING
+            CStr::from_bytes_with_nul(b"\0").unwrap()
         }
     }
 
@@ -571,7 +571,6 @@ impl InferenceCore {
     // }
 }
 
-pub static EMPTY_METAS_CSTRING: Lazy<CString> = Lazy::new(|| CString::new("").unwrap());
 
 pub static SUPPORTED_DEVICES: Lazy<SupportedDevices> =
     Lazy::new(|| SupportedDevices::get_supported_devices().unwrap());
