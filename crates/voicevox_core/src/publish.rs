@@ -98,7 +98,7 @@ impl VoicevoxCore {
     }
 
     pub fn get_metas_json(&mut self) -> CString {
-        CString::new(self.synthesis_engine.inference_core_mut().metas()).unwrap()
+        self.synthesis_engine.inference_core_mut().metas()
     }
 
     pub fn get_supported_devices_json(&self) -> &'static CStr {
@@ -340,12 +340,12 @@ impl InferenceCore {
         self.status_option = None;
     }
 
-    pub fn metas(&mut self) -> String {
+    pub fn metas(&mut self) -> CString {
         if let Some(status) = self.status_option.as_mut() {
             return status.metas_str.clone();
         }
 
-        "".to_string()
+        CString::new("").unwrap()
     }
 
     pub fn variance_forward(

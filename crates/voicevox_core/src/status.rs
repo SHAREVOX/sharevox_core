@@ -13,6 +13,7 @@ cfg_if! {
     }
 }
 use std::collections::{BTreeMap, BTreeSet};
+use std::ffi::CString;
 use std::path::{Path, PathBuf};
 
 pub struct Status {
@@ -24,7 +25,7 @@ pub struct Status {
     usable_model_data_map: BTreeMap<String, ModelData>,
     pub usable_model_map: BTreeMap<String, Models>,
     pub speaker_id_map: BTreeMap<u64, String>,
-    pub metas_str: String,
+    pub metas_str: CString,
 }
 
 pub struct Models {
@@ -177,7 +178,7 @@ impl Status {
             usable_model_data_map: BTreeMap::new(),
             usable_model_map: BTreeMap::new(),
             speaker_id_map: BTreeMap::new(),
-            metas_str: String::new(),
+            metas_str: CString::new("").unwrap(),
         }
     }
 
@@ -223,7 +224,7 @@ impl Status {
                 }
             }
         }
-        self.metas_str = serde_json::to_string(&all_metas).unwrap();
+        self.metas_str = CString::new(serde_json::to_string(&all_metas).unwrap()).unwrap();
         Ok(())
     }
 
