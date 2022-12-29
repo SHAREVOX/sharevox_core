@@ -178,7 +178,7 @@ impl Status {
             usable_model_data_map: BTreeMap::new(),
             usable_model_map: BTreeMap::new(),
             speaker_id_map: BTreeMap::new(),
-            metas_str: CString::new("").unwrap(),
+            metas_str: CString::default(),
         }
     }
 
