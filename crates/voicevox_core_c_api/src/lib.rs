@@ -204,71 +204,6 @@ pub unsafe extern "C" fn voicevox_variance_forward_data_free(
     libc::free(variance_forward_duration_data as *mut c_void);
 }
 
-/// モーラごとのF0を推論する
-/// @param [in] length vowel_phoneme_vector, consonant_phoneme_vector, start_accent_vector, end_accent_vector, start_accent_phrase_vector, end_accent_phrase_vector, output のデータ長
-/// @param [in] vowel_phoneme_vector 母音の音素データ
-/// @param [in] consonant_phoneme_vector 子音の音素データ
-/// @param [in] start_accent_vector アクセントの開始位置のデータ
-/// @param [in] end_accent_vector アクセントの終了位置のデータ
-/// @param [in] start_accent_phrase_vector アクセント句の開始位置のデータ
-/// @param [in] end_accent_phrase_vector アクセント句の終了位置のデータ
-/// @param [in] speaker_id 話者ID
-/// @param [out] output_predict_intonation_data_length 出力データのサイズ
-/// @param [out] output_predict_intonation_data データの出力先
-/// @return 結果コード #VoicevoxResultCode
-///
-/// # Safety
-/// @param vowel_phoneme_vector 必ずlengthの長さだけデータがある状態で渡すこと
-/// @param consonant_phoneme_vector 必ずlengthの長さだけデータがある状態で渡すこと
-/// @param start_accent_vector 必ずlengthの長さだけデータがある状態で渡すこと
-/// @param end_accent_vector 必ずlengthの長さだけデータがある状態で渡すこと
-/// @param start_accent_phrase_vector 必ずlengthの長さだけデータがある状態で渡すこと
-/// @param end_accent_phrase_vector 必ずlengthの長さだけデータがある状態で渡すこと
-/// @param output_predict_intonation_data_length uintptr_t 分のメモリ領域が割り当てられていること
-/// @param output_predict_intonation_data 成功後にメモリ領域が割り当てられるので ::voicevox_predict_intonation_data_free で解放する必要がある
-// #[no_mangle]
-// pub unsafe extern "C" fn voicevox_predict_intonation(
-//     length: usize,
-//     vowel_phoneme_vector: *mut i64,
-//     consonant_phoneme_vector: *mut i64,
-//     start_accent_vector: *mut i64,
-//     end_accent_vector: *mut i64,
-//     start_accent_phrase_vector: *mut i64,
-//     end_accent_phrase_vector: *mut i64,
-//     speaker_id: u32,
-//     output_predict_intonation_data_length: *mut usize,
-//     output_predict_intonation_data: *mut *mut f32,
-// ) -> VoicevoxResultCode {
-//     into_result_code_with_error((|| {
-//         let output_vec = lock_internal().predict_intonation(
-//             length,
-//             std::slice::from_raw_parts(vowel_phoneme_vector, length),
-//             std::slice::from_raw_parts(consonant_phoneme_vector, length),
-//             std::slice::from_raw_parts(start_accent_vector, length),
-//             std::slice::from_raw_parts(end_accent_vector, length),
-//             std::slice::from_raw_parts(start_accent_phrase_vector, length),
-//             std::slice::from_raw_parts(end_accent_phrase_vector, length),
-//             speaker_id,
-//         )?;
-//         write_predict_intonation_to_ptr(
-//             output_predict_intonation_data,
-//             output_predict_intonation_data_length,
-//             &output_vec,
-//         );
-//         Ok(())
-//     })())
-// }
-
-/// ::voicevox_predict_intonationで出力されたデータを解放する
-/// @param[in] predict_intonation_data 確保されたメモリ領域
-///
-/// # Safety
-/// @param predict_intonation_data 実行後に割り当てられたメモリ領域が解放される
-// #[no_mangle]
-// pub unsafe extern "C" fn voicevox_predict_intonation_data_free(predict_intonation_data: *mut f32) {
-//     libc::free(predict_intonation_data as *mut c_void);
-// }
-
 /// decodeを実行する
 /// @param [in] length f0 , output のデータ長及び phoneme のデータ長に関連する
 /// @param [in] phoneme_size 音素のサイズ phoneme のデータ長に関連する
@@ -284,28 +219,27 @@ pub unsafe extern "C" fn voicevox_variance_forward_data_free(
 /// @param phoneme_vector 必ず length * phoneme_size の長さだけデータがある状態で渡すこと
 /// @param output_decode_data_length uintptr_t 分のメモリ領域が割り当てられていること
 /// @param output_decode_data 成功後にメモリ領域が割り当てられるので ::voicevox_decode_data_free で解放する必要がある
-// #[no_mangle]
-// pub unsafe extern "C" fn voicevox_decode(
-//     length: usize,
-//     phoneme_size: usize,
-//     f0: *mut f32,
-//     phoneme_vector: *mut f32,
-//     speaker_id: u32,
-//     output_decode_data_length: *mut usize,
-//     output_decode_data: *mut *mut f32,
-// ) -> VoicevoxResultCode {
-//     into_result_code_with_error((|| {
-//         let output_vec = lock_internal().decode(
-//             length,
-//             phoneme_size,
-//             std::slice::from_raw_parts(f0, length),
-//             std::slice::from_raw_parts(phoneme_vector, phoneme_size * length),
-//             speaker_id,
-//         )?;
-//         write_decode_to_ptr(output_decode_data, output_decode_data_length, &output_vec);
-//         Ok(())
-//     })())
-// }
+#[no_mangle]
+pub unsafe extern "C" fn voicevox_decode_forward(
+    length: usize,
+    phonemes: *mut i64,
+    pitches: *mut f32,
+    durations: *mut f32,
+    speaker_id: u32,
+    output_decode_data_length: *mut usize,
+    output_decode_data: *mut *mut f32,
+) -> VoicevoxResultCode {
+    into_result_code_with_error((|| {
+        let output_vec = lock_internal().decode_forward(
+            std::slice::from_raw_parts_mut(phonemes, length),
+            std::slice::from_raw_parts_mut(pitches, length),
+            std::slice::from_raw_parts_mut(durations, length),
+            speaker_id,
+        )?;
+        write_decode_to_ptr(output_decode_data, output_decode_data_length, &output_vec);
+        Ok(())
+    })())
+}
 
 /// ::voicevox_decodeで出力されたデータを解放する
 /// @param[in] decode_data 確保されたメモリ領域
@@ -313,9 +247,9 @@ pub unsafe extern "C" fn voicevox_variance_forward_data_free(
 /// # Safety
 /// @param decode_data 実行後に割り当てられたメモリ領域が解放される
 // #[no_mangle]
-// pub unsafe extern "C" fn voicevox_decode_data_free(decode_data: *mut f32) {
-//     libc::free(decode_data as *mut c_void);
-// }
+pub unsafe extern "C" fn voicevox_decode_data_free(decode_data: *mut f32) {
+    libc::free(decode_data as *mut c_void);
+}
 
 /// Audio query のオプション
 #[repr(C)]

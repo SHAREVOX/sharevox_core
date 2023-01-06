@@ -110,68 +110,31 @@ pub extern "C" fn variance_forward(
     }
 }
 
-// #[no_mangle]
-// pub extern "C" fn yukarin_sa_forward(
-//     length: i64,
-//     vowel_phoneme_list: *mut i64,
-//     consonant_phoneme_list: *mut i64,
-//     start_accent_list: *mut i64,
-//     end_accent_list: *mut i64,
-//     start_accent_phrase_list: *mut i64,
-//     end_accent_phrase_list: *mut i64,
-//     speaker_id: *mut i64,
-//     output: *mut f32,
-// ) -> bool {
-//     let result = lock_internal().predict_intonation(
-//         length as usize,
-//         unsafe { std::slice::from_raw_parts(vowel_phoneme_list, length as usize) },
-//         unsafe { std::slice::from_raw_parts(consonant_phoneme_list, length as usize) },
-//         unsafe { std::slice::from_raw_parts(start_accent_list, length as usize) },
-//         unsafe { std::slice::from_raw_parts(end_accent_list, length as usize) },
-//         unsafe { std::slice::from_raw_parts(start_accent_phrase_list, length as usize) },
-//         unsafe { std::slice::from_raw_parts(end_accent_phrase_list, length as usize) },
-//         unsafe { *speaker_id as u32 },
-//     );
-//     match result {
-//         Ok(output_vec) => {
-//             let output_slice = unsafe { std::slice::from_raw_parts_mut(output, length as usize) };
-//             output_slice.clone_from_slice(&output_vec);
-//             true
-//         }
-//         Err(err) => {
-//             set_message(&format!("{}", err));
-//             false
-//         }
-//     }
-// }
-
-// #[no_mangle]
-// pub extern "C" fn decode_forward(
-//     length: i64,
-//     phoneme_size: i64,
-//     f0: *mut f32,
-//     phoneme: *mut f32,
-//     speaker_id: *mut i64,
-//     output: *mut f32,
-// ) -> bool {
-//     let length = length as usize;
-//     let phoneme_size = phoneme_size as usize;
-//     let result = lock_internal().decode(
-//         length,
-//         phoneme_size,
-//         unsafe { std::slice::from_raw_parts(f0, length) },
-//         unsafe { std::slice::from_raw_parts(phoneme, phoneme_size * length) },
-//         unsafe { *speaker_id as u32 },
-//     );
-//     match result {
-//         Ok(output_vec) => {
-//             let output_slice = unsafe { std::slice::from_raw_parts_mut(output, length * 256) };
-//             output_slice.clone_from_slice(&output_vec);
-//             true
-//         }
-//         Err(err) => {
-//             set_message(&format!("{}", err));
-//             false
-//         }
-//     }
-// }
+#[no_mangle]
+pub extern "C" fn decode_forward(
+    length: i64,
+    phonemes: *mut i64,
+    pitches: *mut f32,
+    durations: *mut f32,
+    speaker_id: *mut i64,
+    output: *mut f32,
+) -> bool {
+    let length = length as usize;
+    let result = lock_internal().decode_forward(
+        unsafe { std::slice::from_raw_parts_mut(phonemes, length) },
+        unsafe { std::slice::from_raw_parts_mut(pitches, length) },
+        unsafe { std::slice::from_raw_parts_mut(durations, length) },
+        unsafe { *speaker_id as u32 },
+    );
+    match result {
+        Ok(output_vec) => {
+            let output_slice = unsafe { std::slice::from_raw_parts_mut(output, length * 256) };
+            output_slice.clone_from_slice(&output_vec);
+            true
+        }
+        Err(err) => {
+            set_message(&format!("{}", err));
+            false
+        }
+    }
+}

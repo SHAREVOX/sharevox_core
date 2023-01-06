@@ -9,12 +9,31 @@ use onnxruntime::{
 };
 use std::ffi::{CStr, CString};
 use std::path::{Path, PathBuf};
+use numerics::F32Ext as _;
 use std::sync::Mutex;
 
 // const PHONEME_LENGTH_MINIMAL: f32 = 0.01;
+const HIDDEN_SIZE: usize = 192;
 
 // static SPEAKER_ID_MAP: Lazy<BTreeMap<u32, (usize, u32)>> =
 //     Lazy::new(|| include!("include_speaker_id_map.rs").into_iter().collect());
+
+fn length_regulator(length: usize, embedded_vector: Vec<f32>, durations: &[f32]) -> Vec<f32> {
+    let mut length_regulated_vector = Vec::new();
+    for i in 0..length {
+        // numpy/pythonのroundと挙動を合わせるため、round_ties_even_を用いている
+        let regulation_size = (durations[i] * 93.75 * 2.0).round_ties_even_() as usize; // 24000 / 256 = 93.75
+        let start = length_regulated_vector.len();
+        let expand_size = regulation_size * HIDDEN_SIZE;
+        length_regulated_vector.resize_with(start + expand_size, Default::default);
+        for j in (0..expand_size).step_by(HIDDEN_SIZE) {
+            for k in 0..HIDDEN_SIZE {
+                length_regulated_vector[start + j + k] = embedded_vector[i * HIDDEN_SIZE + k];
+            }
+        }
+    }
+    length_regulated_vector
+}
 
 pub struct VoicevoxCore {
     synthesis_engine: SynthesisEngine,
@@ -121,48 +140,20 @@ impl VoicevoxCore {
         )
     }
 
-    // #[allow(clippy::too_many_arguments)]
-    // pub fn predict_intonation(
-    //     &mut self,
-    //     length: usize,
-    //     vowel_phoneme_vector: &[i64],
-    //     consonant_phoneme_vector: &[i64],
-    //     start_accent_vector: &[i64],
-    //     end_accent_vector: &[i64],
-    //     start_accent_phrase_vector: &[i64],
-    //     end_accent_phrase_vector: &[i64],
-    //     speaker_id: u32,
-    // ) -> Result<Vec<f32>> {
-    //     self.synthesis_engine
-    //         .inference_core_mut()
-    //         .predict_intonation(
-    //             length,
-    //             vowel_phoneme_vector,
-    //             consonant_phoneme_vector,
-    //             start_accent_vector,
-    //             end_accent_vector,
-    //             start_accent_phrase_vector,
-    //             end_accent_phrase_vector,
-    //             speaker_id,
-    //         )
-    // }
-
-    // pub fn decode(
-    //     &mut self,
-    //     length: usize,
-    //     phoneme_size: usize,
-    //     f0: &[f32],
-    //     phoneme_vector: &[f32],
-    //     speaker_id: u32,
-    // ) -> Result<Vec<f32>> {
-    //     self.synthesis_engine.inference_core_mut().decode(
-    //         length,
-    //         phoneme_size,
-    //         f0,
-    //         phoneme_vector,
-    //         speaker_id,
-    //     )
-    // }
+    pub fn decode_forward(
+        &mut self,
+        phoneme_vector: &[i64],
+        pitch_vector: &[f32],
+        duration_vector: &[f32],
+        speaker_id: u32,
+    ) -> Result<Vec<f32>> {
+        self.synthesis_engine.inference_core_mut().decode_forward(
+            phoneme_vector,
+            pitch_vector,
+            duration_vector,
+            speaker_id,
+        )
+    }
 
     // pub fn audio_query(
     //     &mut self,
@@ -403,175 +394,75 @@ impl InferenceCore {
         status.variance_session_run(&library_uuid, input_tensors)
     }
 
-    // #[allow(clippy::too_many_arguments)]
-    // pub fn predict_intonation(
-    //     &mut self,
-    //     length: usize,
-    //     vowel_phoneme_vector: &[i64],
-    //     consonant_phoneme_vector: &[i64],
-    //     start_accent_vector: &[i64],
-    //     end_accent_vector: &[i64],
-    //     start_accent_phrase_vector: &[i64],
-    //     end_accent_phrase_vector: &[i64],
-    //     speaker_id: u32,
-    // ) -> Result<Vec<f32>> {
-    //     if !self.initialized {
-    //         return Err(Error::UninitializedStatus);
-    //     }
+    pub fn decode_forward(
+        &mut self,
+        phoneme_vector: &[i64],
+        pitch_vector: &[f32],
+        duration_vector: &[f32],
+        speaker_id: u32,
+    ) -> Result<Vec<f32>> {
+        if !self.initialized {
+            return Err(Error::UninitializedStatus);
+        }
 
-    //     let status = self
-    //         .status_option
-    //         .as_mut()
-    //         .ok_or(Error::UninitializedStatus)?;
+        let status = self
+            .status_option
+            .as_mut()
+            .ok_or(Error::UninitializedStatus)?;
 
-    //     let (model_index, speaker_id) =
-    //         if let Some((model_index, speaker_id)) = get_model_index_and_speaker_id(speaker_id) {
-    //             (model_index, speaker_id)
-    //         } else {
-    //             return Err(Error::InvalidSpeakerId { speaker_id });
-    //         };
+        let library_uuid =
+            if let Some(library_uuid) = status.get_library_uuid_from_speaker_id(speaker_id) {
+                library_uuid
+            } else {
+                return Err(Error::InvalidSpeakerId { speaker_id });
+            };
 
-    //     if model_index >= Status::MODELS_COUNT {
-    //         return Err(Error::InvalidModelIndex { model_index });
-    //     }
+        // NOTE: statusのusable_model_mapが不正でありうる場合、エラーを報告すべき？
+        let start_speaker_id = status
+            .usable_model_map
+            .get(&library_uuid)
+            .unwrap()
+            .model_config
+            .start_id as i64;
+        let model_speaker_id = speaker_id as i64 - start_speaker_id;
 
-    //     let mut length_array = NdArray::new(ndarray::arr0(length as i64));
-    //     let mut vowel_phoneme_vector_array = NdArray::new(ndarray::arr1(vowel_phoneme_vector));
-    //     let mut consonant_phoneme_vector_array =
-    //         NdArray::new(ndarray::arr1(consonant_phoneme_vector));
-    //     let mut start_accent_vector_array = NdArray::new(ndarray::arr1(start_accent_vector));
-    //     let mut end_accent_vector_array = NdArray::new(ndarray::arr1(end_accent_vector));
-    //     let mut start_accent_phrase_vector_array =
-    //         NdArray::new(ndarray::arr1(start_accent_phrase_vector));
-    //     let mut end_accent_phrase_vector_array =
-    //         NdArray::new(ndarray::arr1(end_accent_phrase_vector));
-    //     let mut speaker_id_array = NdArray::new(ndarray::arr1(&[speaker_id as i64]));
+        let mut phoneme_vector_array = NdArray::new(
+            ndarray::arr1(phoneme_vector)
+                .into_shape([1, phoneme_vector.len()])
+                .unwrap(),
+        );
+        let mut pitch_vector_array = NdArray::new(
+            ndarray::arr1(pitch_vector)
+                .into_shape([1, pitch_vector.len()])
+                .unwrap(),
+        );
+        let mut speaker_id_array = NdArray::new(ndarray::arr1(&[model_speaker_id]));
 
-    //     let input_tensors: Vec<&mut dyn AnyArray> = vec![
-    //         &mut length_array,
-    //         &mut vowel_phoneme_vector_array,
-    //         &mut consonant_phoneme_vector_array,
-    //         &mut start_accent_vector_array,
-    //         &mut end_accent_vector_array,
-    //         &mut start_accent_phrase_vector_array,
-    //         &mut end_accent_phrase_vector_array,
-    //         &mut speaker_id_array,
-    //     ];
+        let embedder_input_tensors: Vec<&mut dyn AnyArray> = vec![
+            &mut phoneme_vector_array,
+            &mut pitch_vector_array,
+            &mut speaker_id_array,
+        ];
 
-    //     status.predict_intonation_session_run(model_index, input_tensors)
-    // }
+        let embedded_vector = status.embedder_session_run(&library_uuid, embedder_input_tensors);
+        let embedded_vector = match embedded_vector {
+            Ok(vector) => vector,
+            Err(e) => return Err(e),
+        };
 
-    // pub fn decode(
-    //     &mut self,
-    //     length: usize,
-    //     phoneme_size: usize,
-    //     f0: &[f32],
-    //     phoneme_vector: &[f32],
-    //     speaker_id: u32,
-    // ) -> Result<Vec<f32>> {
-    //     if !self.initialized {
-    //         return Err(Error::UninitializedStatus);
-    //     }
+        let length_regulated_vector =
+            length_regulator(phoneme_vector.len(), embedded_vector, duration_vector);
+        let mut length_regulated_vector_array = NdArray::new(
+            ndarray::arr1(length_regulated_vector.as_slice())
+                .into_shape([1, length_regulated_vector.len()])
+                .unwrap(),
+        );
 
-    //     let status = self
-    //         .status_option
-    //         .as_mut()
-    //         .ok_or(Error::UninitializedStatus)?;
+        let decoder_input_tensors: Vec<&mut dyn AnyArray> =
+            vec![&mut length_regulated_vector_array];
 
-    //     let (model_index, speaker_id) =
-    //         if let Some((model_index, speaker_id)) = get_model_index_and_speaker_id(speaker_id) {
-    //             (model_index, speaker_id)
-    //         } else {
-    //             return Err(Error::InvalidSpeakerId { speaker_id });
-    //         };
-
-    //     if model_index >= Status::MODELS_COUNT {
-    //         return Err(Error::InvalidModelIndex { model_index });
-    //     }
-
-    //     // 音が途切れてしまうのを避けるworkaround処理が入っている
-    //     // TODO: 改善したらここのpadding処理を取り除く
-    //     const PADDING_SIZE: f64 = 0.4;
-    //     const DEFAULT_SAMPLING_RATE: f64 = 24000.0;
-    //     let padding_size = ((PADDING_SIZE * DEFAULT_SAMPLING_RATE) / 256.0).round() as usize;
-    //     let start_and_end_padding_size = 2 * padding_size;
-    //     let length_with_padding = length + start_and_end_padding_size;
-    //     let f0_with_padding = Self::make_f0_with_padding(f0, length_with_padding, padding_size);
-
-    //     let phoneme_with_padding = Self::make_phoneme_with_padding(
-    //         phoneme_vector,
-    //         phoneme_size,
-    //         length_with_padding,
-    //         padding_size,
-    //     );
-
-    //     let mut f0_array = NdArray::new(
-    //         ndarray::arr1(&f0_with_padding)
-    //             .into_shape([length_with_padding, 1])
-    //             .unwrap(),
-    //     );
-    //     let mut phoneme_array = NdArray::new(
-    //         ndarray::arr1(&phoneme_with_padding)
-    //             .into_shape([length_with_padding, phoneme_size])
-    //             .unwrap(),
-    //     );
-    //     let mut speaker_id_array = NdArray::new(ndarray::arr1(&[speaker_id as i64]));
-
-    //     let input_tensors: Vec<&mut dyn AnyArray> =
-    //         vec![&mut f0_array, &mut phoneme_array, &mut speaker_id_array];
-
-    //     status
-    //         .decode_session_run(model_index, input_tensors)
-    //         .map(|output| Self::trim_padding_from_output(output, padding_size))
-    // }
-
-    // fn make_f0_with_padding(
-    //     f0_slice: &[f32],
-    //     length_with_padding: usize,
-    //     padding_size: usize,
-    // ) -> Vec<f32> {
-    //     // 音が途切れてしまうのを避けるworkaround処理
-    //     // 改善したらこの関数を削除する
-    //     let mut f0_with_padding = Vec::with_capacity(length_with_padding);
-    //     let padding = vec![0.0; padding_size];
-    //     f0_with_padding.extend_from_slice(&padding);
-    //     f0_with_padding.extend_from_slice(f0_slice);
-    //     f0_with_padding.extend_from_slice(&padding);
-    //     f0_with_padding
-    // }
-
-    // fn make_phoneme_with_padding(
-    //     phoneme_slice: &[f32],
-    //     phoneme_size: usize,
-    //     length_with_padding: usize,
-    //     padding_size: usize,
-    // ) -> Vec<f32> {
-    //     // 音が途切れてしまうのを避けるworkaround処理
-    //     // 改善したらこの関数を削除する
-    //     let mut padding_phoneme = vec![0.0; phoneme_size];
-    //     padding_phoneme[0] = 1.0;
-    //     let padding_phoneme_len = padding_phoneme.len();
-    //     let padding_phonemes: Vec<f32> = padding_phoneme
-    //         .into_iter()
-    //         .cycle()
-    //         .take(padding_phoneme_len * padding_size)
-    //         .collect();
-    //     let mut phoneme_with_padding = Vec::with_capacity(phoneme_size * length_with_padding);
-    //     phoneme_with_padding.extend_from_slice(&padding_phonemes);
-    //     phoneme_with_padding.extend_from_slice(phoneme_slice);
-    //     phoneme_with_padding.extend_from_slice(&padding_phonemes);
-
-    //     phoneme_with_padding
-    // }
-
-    // fn trim_padding_from_output(mut output: Vec<f32>, padding_f0_size: usize) -> Vec<f32> {
-    //     // 音が途切れてしまうのを避けるworkaround処理
-    //     // 改善したらこの関数を削除する
-    //     let padding_sampling_size = padding_f0_size * 256;
-    //     output
-    //         .drain(padding_sampling_size..output.len() - padding_sampling_size)
-    //         .collect()
-    // }
+        status.decoder_session_run(&library_uuid, decoder_input_tensors)
+    }
 }
 
 pub static SUPPORTED_DEVICES: Lazy<SupportedDevices> =
