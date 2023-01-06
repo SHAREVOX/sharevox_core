@@ -22,7 +22,7 @@ fn length_regulator(length: usize, embedded_vector: Vec<f32>, durations: &[f32])
     let mut length_regulated_vector = Vec::new();
     for i in 0..length {
         // numpy/pythonのroundと挙動を合わせるため、round_ties_even_を用いている
-        let regulation_size = (durations[i] * 93.75 * 2.0).round_ties_even_() as usize; // 24000 / 256 = 93.75
+        let regulation_size = ((durations[i] * 93.75).round_ties_even_() as usize) * 2; // 24000 / 256 = 93.75
         let start = length_regulated_vector.len();
         let expand_size = regulation_size * HIDDEN_SIZE;
         length_regulated_vector.resize_with(start + expand_size, Default::default);
