@@ -18,7 +18,7 @@ const HIDDEN_SIZE: usize = 192;
 // static SPEAKER_ID_MAP: Lazy<BTreeMap<u32, (usize, u32)>> =
 //     Lazy::new(|| include!("include_speaker_id_map.rs").into_iter().collect());
 
-fn length_regulator(length: usize, embedded_vector: Vec<f32>, durations: &[f32]) -> Vec<f32> {
+fn length_regulator(length: usize, embedded_vector: &[f32], durations: &[f32]) -> Vec<f32> {
     let mut length_regulated_vector = Vec::new();
     for i in 0..length {
         // numpy/pythonのroundと挙動を合わせるため、round_ties_even_を用いている
@@ -444,11 +444,8 @@ impl InferenceCore {
             &mut speaker_id_array,
         ];
 
-        let embedded_vector = status.embedder_session_run(&library_uuid, embedder_input_tensors);
-        let embedded_vector = match embedded_vector {
-            Ok(vector) => vector,
-            Err(e) => return Err(e),
-        };
+        let embedded_vector =
+            &status.embedder_session_run(&library_uuid, embedder_input_tensors)?;
 
         let length_regulated_vector =
             length_regulator(phoneme_vector.len(), embedded_vector, duration_vector);
