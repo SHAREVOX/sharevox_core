@@ -2,6 +2,7 @@ use self::engine::*;
 use self::result_code::VoicevoxResultCode;
 use self::status::*;
 use super::*;
+use numerics::F32Ext as _;
 use once_cell::sync::Lazy;
 use onnxruntime::{
     ndarray,
@@ -9,7 +10,6 @@ use onnxruntime::{
 };
 use std::ffi::{CStr, CString};
 use std::path::{Path, PathBuf};
-use numerics::F32Ext as _;
 use std::sync::Mutex;
 
 // const PHONEME_LENGTH_MINIMAL: f32 = 0.01;
