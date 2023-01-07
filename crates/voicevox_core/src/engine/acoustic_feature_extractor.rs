@@ -60,6 +60,23 @@ static PHONEME_MAP: Lazy<HashMap<&str, i64>> = Lazy::new(|| {
     m
 });
 
+#[rustfmt::skip]
+const ACCENT_LIST: &[&str] = &[
+    "[",
+    "]",
+    "#",
+    "?",
+    "_",
+];
+
+static ACCENT_MAP: Lazy<HashMap<&str, i64>> = Lazy::new(|| {
+    let mut m = HashMap::new();
+    for (i, s) in ACCENT_LIST.iter().enumerate() {
+        m.insert(*s, i as i64);
+    }
+    m
+});
+
 #[derive(Debug, Clone, PartialEq, new, Default, Getters)]
 pub struct OjtPhoneme {
     phoneme: String,
@@ -99,6 +116,21 @@ impl OjtPhoneme {
             }
         }
         phonemes
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, new, Default, Getters)]
+pub struct Accent {
+    accent: String,
+}
+
+impl Accent {
+    pub fn num_phoneme() -> usize {
+        ACCENT_MAP.len()
+    }
+
+    pub fn accent_id(&self) -> i64 {
+        *ACCENT_MAP.get(&self.accent.as_str()).unwrap()
     }
 }
 
