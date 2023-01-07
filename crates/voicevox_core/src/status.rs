@@ -1,8 +1,10 @@
 use super::*;
+use numerics::F32Ext as _;
 use once_cell::sync::Lazy;
 use onnxruntime::{
     environment::Environment,
-    session::{AnyArray, Session},
+    ndarray,
+    session::{AnyArray, NdArray, Session},
     GraphOptimizationLevel, LoggingLevel,
 };
 use serde::{Deserialize, Serialize};
@@ -26,6 +28,7 @@ pub struct Status {
     pub usable_model_map: BTreeMap<String, Models>,
     pub speaker_id_map: BTreeMap<u64, String>,
     pub metas_str: CString,
+    gaussian_session: Option<Session<'static>>,
 }
 
 pub struct Models {
@@ -168,6 +171,12 @@ fn open_libraries(root_dir_path: &Path) -> Result<BTreeMap<String, bool>> {
 unsafe impl Send for Status {}
 
 impl Status {
+    const GAUSSIAN_MODEL: &[u8] = include_bytes!(concat!(
+        env!("CARGO_WORKSPACE_DIR"),
+        "/model/gaussian_model.onnx"
+    ));
+    pub const HIDDEN_SIZE: usize = 192;
+
     pub fn new(root_dir_path: &Path, use_gpu: bool, cpu_num_threads: u16) -> Self {
         Self {
             root_dir_path: root_dir_path.to_path_buf(),
@@ -179,6 +188,7 @@ impl Status {
             usable_model_map: BTreeMap::new(),
             speaker_id_map: BTreeMap::new(),
             metas_str: CString::default(),
+            gaussian_session: None,
         }
     }
 
@@ -191,6 +201,11 @@ impl Status {
             .filter(|(_, &v)| v)
             .map(|(k, _)| k.to_owned())
             .collect();
+
+        self.gaussian_session = Some(
+            self.new_session(Self::GAUSSIAN_MODEL, &self.light_session_options)
+                .map_err(Error::LoadModel)?,
+        );
 
         let mut all_metas: Vec<Meta> = Vec::new();
         for library_uuid in self.usable_libraries.iter() {
@@ -334,6 +349,15 @@ impl Status {
         }
     }
 
+    fn gaussian_session_run(&mut self, inputs: Vec<&mut dyn AnyArray>) -> Result<Vec<f32>> {
+        let model = self.gaussian_session.as_mut().unwrap();
+        if let Ok(output_tensors) = model.run(inputs) {
+            Ok(output_tensors[0].as_slice().unwrap().to_owned())
+        } else {
+            Err(Error::InferenceFailed)
+        }
+    }
+
     pub fn decoder_session_run(
         &mut self,
         library_uuid: &str,
@@ -355,6 +379,60 @@ impl Status {
 
     pub fn get_library_uuid_from_speaker_id(&self, speaker_id: u32) -> Option<String> {
         self.speaker_id_map.get(&(speaker_id as u64)).cloned()
+    }
+
+    pub fn length_regulator(
+        &mut self,
+        length: usize,
+        embedded_vector: &[f32],
+        durations: &[f32],
+    ) -> Vec<f32> {
+        let mut length_regulated_vector = Vec::new();
+        for i in 0..length {
+            // numpy/pythonのroundと挙動を合わせるため、round_ties_even_を用いている
+            let regulation_size = ((durations[i] * 93.75).round_ties_even_() as usize) * 2; // 24000 / 256 = 93.75
+            let start = length_regulated_vector.len();
+            let expand_size = regulation_size * Status::HIDDEN_SIZE;
+            length_regulated_vector.resize_with(start + expand_size, Default::default);
+            for j in (0..expand_size).step_by(Status::HIDDEN_SIZE) {
+                for k in 0..Status::HIDDEN_SIZE {
+                    length_regulated_vector[start + j + k] =
+                        embedded_vector[i * Status::HIDDEN_SIZE + k];
+                }
+            }
+        }
+        length_regulated_vector
+    }
+
+    pub fn gaussian_upsampling(
+        &mut self,
+        length: usize,
+        embedded_vector: &[f32],
+        durations: &[f32],
+    ) -> Vec<f32> {
+        let mut int_durations = vec![0 as i64; length];
+        for i in 0..length {
+            // numpy/pythonのroundと挙動を合わせるため、round_ties_even_を用いている
+            let regulation_size = ((durations[i] * 93.75).round_ties_even_() as usize) * 2; // 24000 / 256 = 93.75
+            int_durations[i] = regulation_size as i64;
+        }
+
+        let mut embedded_vector_array = NdArray::new(
+            ndarray::arr1(embedded_vector)
+                .into_shape([1, embedded_vector.len(), Status::HIDDEN_SIZE])
+                .unwrap(),
+        );
+        let mut duration_vector_array = NdArray::new(
+            ndarray::arr1(&int_durations)
+                .into_shape([1, int_durations.len()])
+                .unwrap(),
+        );
+
+        let input_tensors: Vec<&mut dyn AnyArray> =
+            vec![&mut embedded_vector_array, &mut duration_vector_array];
+
+        // 他の推論と違って失敗することはほぼないので、unwrapする
+        self.gaussian_session_run(input_tensors).unwrap()
     }
 }
 

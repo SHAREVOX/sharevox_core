@@ -2,7 +2,6 @@ use self::engine::*;
 use self::result_code::VoicevoxResultCode;
 use self::status::*;
 use super::*;
-use numerics::F32Ext as _;
 use once_cell::sync::Lazy;
 use onnxruntime::{
     ndarray,
@@ -13,27 +12,9 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 // const PHONEME_LENGTH_MINIMAL: f32 = 0.01;
-const HIDDEN_SIZE: usize = 192;
 
 // static SPEAKER_ID_MAP: Lazy<BTreeMap<u32, (usize, u32)>> =
 //     Lazy::new(|| include!("include_speaker_id_map.rs").into_iter().collect());
-
-fn length_regulator(length: usize, embedded_vector: &[f32], durations: &[f32]) -> Vec<f32> {
-    let mut length_regulated_vector = Vec::new();
-    for i in 0..length {
-        // numpy/pythonのroundと挙動を合わせるため、round_ties_even_を用いている
-        let regulation_size = ((durations[i] * 93.75).round_ties_even_() as usize) * 2; // 24000 / 256 = 93.75
-        let start = length_regulated_vector.len();
-        let expand_size = regulation_size * HIDDEN_SIZE;
-        length_regulated_vector.resize_with(start + expand_size, Default::default);
-        for j in (0..expand_size).step_by(HIDDEN_SIZE) {
-            for k in 0..HIDDEN_SIZE {
-                length_regulated_vector[start + j + k] = embedded_vector[i * HIDDEN_SIZE + k];
-            }
-        }
-    }
-    length_regulated_vector
-}
 
 pub struct VoicevoxCore {
     synthesis_engine: SynthesisEngine,
@@ -418,12 +399,13 @@ impl InferenceCore {
             };
 
         // NOTE: statusのusable_model_mapが不正でありうる場合、エラーを報告すべき？
-        let start_speaker_id = status
+        let model_config = status
             .usable_model_map
             .get(&library_uuid)
             .unwrap()
             .model_config
-            .start_id as i64;
+            .clone();
+        let start_speaker_id = model_config.start_id as i64;
         let model_speaker_id = speaker_id as i64 - start_speaker_id;
 
         let mut phoneme_vector_array = NdArray::new(
@@ -447,13 +429,25 @@ impl InferenceCore {
         let embedded_vector =
             &status.embedder_session_run(&library_uuid, embedder_input_tensors)?;
 
-        let length_regulated_vector =
-            length_regulator(phoneme_vector.len(), embedded_vector, duration_vector);
-        let new_length = length_regulated_vector.len() / HIDDEN_SIZE;
+        let length_regulator_type = &model_config.length_regulator;
+
+        let length_regulated_vector: Vec<f32>;
+        if length_regulator_type == "normal" {
+            length_regulated_vector =
+                status.length_regulator(phoneme_vector.len(), embedded_vector, duration_vector);
+        } else if length_regulator_type == "gaussian" {
+            length_regulated_vector =
+                status.gaussian_upsampling(phoneme_vector.len(), embedded_vector, duration_vector);
+        } else {
+            return Err(Error::InvalidLengthRegulator {
+                length_regulator_type: length_regulator_type.to_owned(),
+            });
+        }
+        let new_length = length_regulated_vector.len() / Status::HIDDEN_SIZE;
 
         let mut length_regulated_vector_array = NdArray::new(
             ndarray::arr1(length_regulated_vector.as_slice())
-                .into_shape([1, new_length, HIDDEN_SIZE])
+                .into_shape([1, new_length, Status::HIDDEN_SIZE])
                 .unwrap(),
         );
 
@@ -507,6 +501,9 @@ pub const fn error_result_to_message(result_code: VoicevoxResultCode) -> &'stati
         SHAREVOX_RESULT_LOAD_LIBRARIES_ERROR => "libraries.jsonの読み込みに失敗しました\0",
         SHAREVOX_RESULT_LOAD_MODEL_CONFIG_ERROR => "model_config.jsonの読み込みに失敗しました\0",
         SHAREVOX_RESULT_INVALID_LIBRARY_UUID_ERROR => "無効なlibrary_uuidです\0",
+        SHAREVOX_RESULT_INVALID_LENGTH_REGULATOR_ERROR => {
+            "model_config.jsonのlength_regulatorが無効です\0"
+        }
     }
 }
 
