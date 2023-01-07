@@ -23,12 +23,10 @@ pub struct AccentPhraseModel {
 }
 
 impl AccentPhraseModel {
-    #[allow(dead_code)]
     pub(super) fn set_pause_mora(&mut self, pause_mora: Option<MoraModel>) {
         self.pause_mora = pause_mora;
     }
 
-    #[allow(dead_code)]
     pub(super) fn set_is_interrogative(&mut self, is_interrogative: bool) {
         self.is_interrogative = is_interrogative;
     }

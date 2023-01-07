@@ -4,7 +4,6 @@ use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
 #[rustfmt::skip]
-#[allow(dead_code)]
 const PHONEME_LIST: &[&str] = &[
     "pau",
     "A",
@@ -53,7 +52,6 @@ const PHONEME_LIST: &[&str] = &[
     "z",
 ];
 
-#[allow(dead_code)]
 static PHONEME_MAP: Lazy<HashMap<&str, i64>> = Lazy::new(|| {
     let mut m = HashMap::new();
     for (i, s) in PHONEME_LIST.iter().enumerate() {
@@ -72,17 +70,14 @@ pub struct OjtPhoneme {
 }
 
 impl OjtPhoneme {
-    #[allow(dead_code)]
     pub fn num_phoneme() -> usize {
         PHONEME_MAP.len()
     }
 
-    #[allow(dead_code)]
     pub fn space_phoneme() -> String {
         "pau".into()
     }
 
-    #[allow(dead_code)]
     pub fn phoneme_id(&self) -> i64 {
         if self.phoneme.is_empty() {
             -1
@@ -91,7 +86,6 @@ impl OjtPhoneme {
         }
     }
 
-    #[allow(dead_code)]
     pub fn convert(phonemes: &[OjtPhoneme]) -> Vec<OjtPhoneme> {
         let mut phonemes = phonemes.to_owned();
         if let Some(first_phoneme) = phonemes.first_mut() {

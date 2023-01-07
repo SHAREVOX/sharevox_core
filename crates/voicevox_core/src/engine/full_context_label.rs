@@ -116,7 +116,6 @@ pub struct AccentPhrase {
 }
 
 impl AccentPhrase {
-    #[allow(dead_code)]
     pub fn from_phonemes(mut phonemes: Vec<Phoneme>) -> Result<Self> {
         let mut moras = Vec::with_capacity(phonemes.len());
         let mut mora_phonemes = Vec::with_capacity(phonemes.len());
@@ -205,7 +204,6 @@ pub struct BreathGroup {
 }
 
 impl BreathGroup {
-    #[allow(dead_code)]
     pub fn from_phonemes(phonemes: Vec<Phoneme>) -> Result<Self> {
         let mut accent_phrases = Vec::with_capacity(phonemes.len());
         let mut accent_phonemes = Vec::with_capacity(phonemes.len());
@@ -254,7 +252,6 @@ pub struct Utterance {
 }
 
 impl Utterance {
-    #[allow(dead_code)]
     pub fn from_phonemes(phonemes: Vec<Phoneme>) -> Result<Self> {
         let mut breath_groups = vec![];
         let mut group_phonemes = Vec::with_capacity(phonemes.len());
@@ -304,7 +301,6 @@ impl Utterance {
         self.phonemes().iter().map(|p| p.label().clone()).collect()
     }
 
-    #[allow(dead_code)]
     pub fn extract_full_context_label(
         open_jtalk: &mut open_jtalk::OpenJtalk,
         text: impl AsRef<str>,

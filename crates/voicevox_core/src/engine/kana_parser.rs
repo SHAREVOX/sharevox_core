@@ -3,17 +3,11 @@ use crate::engine::mora_list::MORA_LIST_MINIMUM;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
-#[allow(dead_code)]
 const UNVOICE_SYMBOL: char = '_';
-#[allow(dead_code)]
 const ACCENT_SYMBOL: char = '\'';
-#[allow(dead_code)]
 const NOPAUSE_DELIMITER: char = '/';
-#[allow(dead_code)]
 const PAUSE_DELIMITER: char = '、';
-#[allow(dead_code)]
 const WIDE_INTERROGATION_MARK: char = '？';
-#[allow(dead_code)]
 const LOOP_LIMIT: usize = 300;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -27,10 +21,8 @@ impl std::fmt::Display for KanaParseError {
 
 impl std::error::Error for KanaParseError {}
 
-#[allow(dead_code)]
 type KanaParseResult<T> = std::result::Result<T, KanaParseError>;
 
-#[allow(dead_code)]
 static TEXT2MORA_WITH_UNVOICE: Lazy<HashMap<String, MoraModel>> = Lazy::new(|| {
     let mut text2mora_with_unvoice = HashMap::new();
     for [text, consonant, vowel] in MORA_LIST_MINIMUM {
@@ -67,7 +59,6 @@ static TEXT2MORA_WITH_UNVOICE: Lazy<HashMap<String, MoraModel>> = Lazy::new(|| {
     text2mora_with_unvoice
 });
 
-#[allow(dead_code)]
 fn text_to_accent_phrase(phrase: &str) -> KanaParseResult<AccentPhraseModel> {
     let phrase_vec: Vec<char> = phrase.chars().collect();
     let mut accent_index: Option<usize> = None;
@@ -135,7 +126,6 @@ fn text_to_accent_phrase(phrase: &str) -> KanaParseResult<AccentPhraseModel> {
     ))
 }
 
-#[allow(dead_code)]
 pub fn parse_kana(text: &str) -> KanaParseResult<Vec<AccentPhraseModel>> {
     const TERMINATOR: char = '\0';
     let mut parsed_result = Vec::new();
@@ -185,7 +175,6 @@ pub fn parse_kana(text: &str) -> KanaParseResult<Vec<AccentPhraseModel>> {
     Ok(parsed_result)
 }
 
-#[allow(dead_code)]
 pub fn create_kana(accent_phrases: &[AccentPhraseModel]) -> String {
     let mut text = String::new();
     for phrase in accent_phrases {

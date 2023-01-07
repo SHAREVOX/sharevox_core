@@ -88,10 +88,10 @@ impl VoicevoxCore {
             options.cpu_num_threads,
             options.load_all_models,
         )?;
-        // if let Some(open_jtalk_dict_dir) = options.open_jtalk_dict_dir {
-        //     self.synthesis_engine
-        //         .load_openjtalk_dict(open_jtalk_dict_dir)?;
-        // }
+        if let Some(open_jtalk_dict_dir) = options.open_jtalk_dict_dir {
+            self.synthesis_engine
+                .load_openjtalk_dict(open_jtalk_dict_dir)?;
+        }
         Ok(())
     }
 
@@ -155,55 +155,55 @@ impl VoicevoxCore {
         )
     }
 
-    // pub fn audio_query(
-    //     &mut self,
-    //     text: &str,
-    //     speaker_id: u32,
-    //     options: AudioQueryOptions,
-    // ) -> Result<AudioQueryModel> {
-    //     if !self.synthesis_engine.is_openjtalk_dict_loaded() {
-    //         return Err(Error::NotLoadedOpenjtalkDict);
-    //     }
-    //     let accent_phrases = if options.kana {
-    //         parse_kana(text)?
-    //     } else {
-    //         self.synthesis_engine
-    //             .create_accent_phrases(text, speaker_id)?
-    //     };
+    pub fn audio_query(
+        &mut self,
+        text: &str,
+        speaker_id: u32,
+        options: AudioQueryOptions,
+    ) -> Result<AudioQueryModel> {
+        if !self.synthesis_engine.is_openjtalk_dict_loaded() {
+            return Err(Error::NotLoadedOpenjtalkDict);
+        }
+        let accent_phrases = if options.kana {
+            parse_kana(text)?
+        } else {
+            self.synthesis_engine
+                .create_accent_phrases(text, speaker_id)?
+        };
 
-    //     let kana = create_kana(&accent_phrases);
+        let kana = create_kana(&accent_phrases);
 
-    //     Ok(AudioQueryModel::new(
-    //         accent_phrases,
-    //         1.,
-    //         0.,
-    //         1.,
-    //         1.,
-    //         0.1,
-    //         0.1,
-    //         SynthesisEngine::DEFAULT_SAMPLING_RATE,
-    //         false,
-    //         kana,
-    //     ))
-    // }
+        Ok(AudioQueryModel::new(
+            accent_phrases,
+            1.,
+            0.,
+            1.,
+            1.,
+            0.1,
+            0.1,
+            SynthesisEngine::DEFAULT_SAMPLING_RATE,
+            false,
+            kana,
+        ))
+    }
 
-    // pub fn synthesis(
-    //     &mut self,
-    //     audio_query: &AudioQueryModel,
-    //     speaker_id: u32,
-    //     options: SynthesisOptions,
-    // ) -> Result<Vec<u8>> {
-    //     self.synthesis_engine.synthesis_wave_format(
-    //         audio_query,
-    //         speaker_id,
-    //         options.enable_interrogative_upspeak,
-    //     )
-    // }
+    pub fn synthesis(
+        &mut self,
+        audio_query: &AudioQueryModel,
+        speaker_id: u32,
+        options: SynthesisOptions,
+    ) -> Result<Vec<u8>> {
+        self.synthesis_engine.synthesis_wave_format(
+            audio_query,
+            speaker_id,
+            options.enable_interrogative_upspeak,
+        )
+    }
 
-    // pub fn tts(&mut self, text: &str, speaker_id: u32, options: TtsOptions) -> Result<Vec<u8>> {
-    //     let audio_query = &self.audio_query(text, speaker_id, AudioQueryOptions::from(&options))?;
-    //     self.synthesis(audio_query, speaker_id, SynthesisOptions::from(&options))
-    // }
+    pub fn tts(&mut self, text: &str, speaker_id: u32, options: TtsOptions) -> Result<Vec<u8>> {
+        let audio_query = &self.audio_query(text, speaker_id, AudioQueryOptions::from(&options))?;
+        self.synthesis(audio_query, speaker_id, SynthesisOptions::from(&options))
+    }
 }
 
 #[derive(Default)]
