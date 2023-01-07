@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   auto initialize_options = voicevox_make_default_initialize_options();
   initialize_options.load_all_models = true;
   initialize_options.open_jtalk_dict_dir = open_jtalk_dict_path.c_str();
-  if (voicevox_initialize(initialize_options) != VOICEVOX_RESULT_OK) {
+  if (voicevox_initialize("../../../model", initialize_options) != VOICEVOX_RESULT_OK) {
     std::cout << "coreの初期化に失敗しました" << std::endl;
     return 1;
   }
