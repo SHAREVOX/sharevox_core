@@ -87,6 +87,7 @@ pub struct OjtPhoneme {
 }
 
 impl OjtPhoneme {
+    #[allow(dead_code)]
     pub fn num_phoneme() -> usize {
         PHONEME_MAP.len()
     }
@@ -125,10 +126,6 @@ pub struct Accent {
 }
 
 impl Accent {
-    pub fn num_phoneme() -> usize {
-        ACCENT_MAP.len()
-    }
-
     pub fn accent_id(&self) -> i64 {
         *ACCENT_MAP.get(&self.accent.as_str()).unwrap()
     }

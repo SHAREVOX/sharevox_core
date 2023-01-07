@@ -5,11 +5,12 @@ use std::path::Path;
 use super::full_context_label::Utterance;
 use super::open_jtalk::OpenJtalk;
 use super::*;
-use crate::numerics::F32Ext as _;
+// use crate::numerics::F32Ext as _;
 use crate::InferenceCore;
 
 const UNVOICED_MORA_PHONEME_LIST: &[&str] = &["A", "I", "U", "E", "O", "cl", "pau"];
 
+#[allow(dead_code)]
 const MORA_PHONEME_LIST: &[&str] = &[
     "a", "i", "u", "e", "o", "N", "A", "I", "U", "E", "O", "cl", "pau",
 ];
@@ -24,7 +25,7 @@ pub struct SynthesisEngine {
 unsafe impl Send for SynthesisEngine {}
 
 impl SynthesisEngine {
-    pub const DEFAULT_SAMPLING_RATE: u32 = 24000;
+    pub const DEFAULT_SAMPLING_RATE: u32 = 48000;
 
     pub fn inference_core(&self) -> &InferenceCore {
         &self.inference_core
@@ -116,28 +117,24 @@ impl SynthesisEngine {
         accent_phrases: &[AccentPhraseModel],
         speaker_id: u32,
     ) -> Result<Vec<AccentPhraseModel>> {
-        let accent_phrases = self.replace_phoneme_length(accent_phrases, speaker_id)?;
-        self.replace_mora_pitch(&accent_phrases, speaker_id)
+        let (accent_phrases, pitches) = self.replace_phoneme_length(accent_phrases, speaker_id)?;
+        self.replace_mora_pitch(&accent_phrases, speaker_id, Some(&pitches))
     }
 
     pub fn replace_phoneme_length(
         &mut self,
         accent_phrases: &[AccentPhraseModel],
         speaker_id: u32,
-    ) -> Result<Vec<AccentPhraseModel>> {
-        let (_, phoneme_data_list) = SynthesisEngine::initial_process(accent_phrases);
+    ) -> Result<(Vec<AccentPhraseModel>, Vec<f32>)> {
+        let (_, phoneme_id_list, accent_id_list) = SynthesisEngine::initial_process(accent_phrases);
 
-        let (_, _, vowel_indexes_data) = split_mora(&phoneme_data_list);
+        let (pitches, phoneme_length) = self.inference_core_mut().variance_forward(
+            &phoneme_id_list,
+            &accent_id_list,
+            speaker_id,
+        )?;
 
-        let phoneme_list_s: Vec<i64> = phoneme_data_list
-            .iter()
-            .map(|phoneme_data| phoneme_data.phoneme_id())
-            .collect();
-        let phoneme_length = self
-            .inference_core_mut()
-            .predict_duration(&phoneme_list_s, speaker_id)?;
-
-        let mut index = 0;
+        let mut index = 1;
         let new_accent_phrases = accent_phrases
             .iter()
             .map(|accent_phrase| {
@@ -146,17 +143,19 @@ impl SynthesisEngine {
                         .moras()
                         .iter()
                         .map(|mora| {
+                            let consonant_is_some = mora.consonant().is_some();
                             let new_mora = MoraModel::new(
                                 mora.text().clone(),
                                 mora.consonant().clone(),
-                                mora.consonant().as_ref().map(|_| {
-                                    phoneme_length[vowel_indexes_data[index + 1] as usize - 1]
-                                }),
+                                mora.consonant().as_ref().map(|_| phoneme_length[index]),
                                 mora.vowel().clone(),
-                                phoneme_length[vowel_indexes_data[index + 1] as usize],
+                                phoneme_length[index + consonant_is_some as usize],
                                 *mora.pitch(),
                             );
                             index += 1;
+                            if consonant_is_some {
+                                index += 1;
+                            }
                             new_mora
                         })
                         .collect(),
@@ -167,7 +166,7 @@ impl SynthesisEngine {
                             pause_mora.consonant().clone(),
                             *pause_mora.consonant_length(),
                             pause_mora.vowel().clone(),
-                            phoneme_length[vowel_indexes_data[index + 1] as usize],
+                            phoneme_length[index],
                             *pause_mora.pitch(),
                         );
                         index += 1;
@@ -178,95 +177,28 @@ impl SynthesisEngine {
             })
             .collect();
 
-        Ok(new_accent_phrases)
+        Ok((new_accent_phrases, pitches))
     }
 
     pub fn replace_mora_pitch(
         &mut self,
         accent_phrases: &[AccentPhraseModel],
         speaker_id: u32,
+        before_pitches: Option<&[f32]>,
     ) -> Result<Vec<AccentPhraseModel>> {
-        let (_, phoneme_data_list) = SynthesisEngine::initial_process(accent_phrases);
+        let (_, phoneme_id_list, accent_id_list) = SynthesisEngine::initial_process(accent_phrases);
 
-        let mut base_start_accent_list = vec![0];
-        let mut base_end_accent_list = vec![0];
-        let mut base_start_accent_phrase_list = vec![0];
-        let mut base_end_accent_phrase_list = vec![0];
-        for accent_phrase in accent_phrases {
-            let mut accent = usize::from(*accent_phrase.accent() != 1);
-            SynthesisEngine::create_one_accent_list(
-                &mut base_start_accent_list,
-                accent_phrase,
-                accent as i32,
-            );
-
-            accent = *accent_phrase.accent() - 1;
-            SynthesisEngine::create_one_accent_list(
-                &mut base_end_accent_list,
-                accent_phrase,
-                accent as i32,
-            );
-            SynthesisEngine::create_one_accent_list(
-                &mut base_start_accent_phrase_list,
-                accent_phrase,
-                0,
-            );
-            SynthesisEngine::create_one_accent_list(
-                &mut base_end_accent_phrase_list,
-                accent_phrase,
-                -1,
-            );
-        }
-        base_start_accent_list.push(0);
-        base_end_accent_list.push(0);
-        base_start_accent_phrase_list.push(0);
-        base_end_accent_phrase_list.push(0);
-
-        let (consonant_phoneme_data_list, vowel_phoneme_data_list, vowel_indexes) =
-            split_mora(&phoneme_data_list);
-
-        let consonant_phoneme_list: Vec<i64> = consonant_phoneme_data_list
-            .iter()
-            .map(|phoneme_data| phoneme_data.phoneme_id())
-            .collect();
-        let vowel_phoneme_list: Vec<i64> = vowel_phoneme_data_list
-            .iter()
-            .map(|phoneme_data| phoneme_data.phoneme_id())
-            .collect();
-
-        let mut start_accent_list = Vec::with_capacity(vowel_indexes.len());
-        let mut end_accent_list = Vec::with_capacity(vowel_indexes.len());
-        let mut start_accent_phrase_list = Vec::with_capacity(vowel_indexes.len());
-        let mut end_accent_phrase_list = Vec::with_capacity(vowel_indexes.len());
-
-        for vowel_index in vowel_indexes {
-            start_accent_list.push(base_start_accent_list[vowel_index as usize]);
-            end_accent_list.push(base_end_accent_list[vowel_index as usize]);
-            start_accent_phrase_list.push(base_start_accent_phrase_list[vowel_index as usize]);
-            end_accent_phrase_list.push(base_end_accent_phrase_list[vowel_index as usize]);
+        let mut pitches;
+        if let Some(before_pitches) = before_pitches {
+            pitches = before_pitches.to_owned();
+        } else {
+            pitches = self
+                .inference_core_mut()
+                .variance_forward(&phoneme_id_list, &accent_id_list, speaker_id)?
+                .0;
         }
 
-        let mut f0_list = self.inference_core_mut().predict_intonation(
-            vowel_phoneme_list.len(),
-            &vowel_phoneme_list,
-            &consonant_phoneme_list,
-            &start_accent_list,
-            &end_accent_list,
-            &start_accent_phrase_list,
-            &end_accent_phrase_list,
-            speaker_id,
-        )?;
-
-        for i in 0..vowel_phoneme_data_list.len() {
-            if UNVOICED_MORA_PHONEME_LIST
-                .iter()
-                .any(|phoneme| *phoneme == vowel_phoneme_data_list[i].phoneme())
-            {
-                f0_list[i] = 0.;
-            }
-        }
-
-        let mut index = 0;
+        let mut index = 1;
         let new_accent_phrases = accent_phrases
             .iter()
             .map(|accent_phrase| {
@@ -275,13 +207,22 @@ impl SynthesisEngine {
                         .moras()
                         .iter()
                         .map(|mora| {
+                            if mora.consonant().is_some() {
+                                index += 1;
+                            }
+                            if UNVOICED_MORA_PHONEME_LIST
+                                .iter()
+                                .any(|phoneme| *phoneme == mora.vowel())
+                            {
+                                pitches[index] = 0.;
+                            }
                             let new_mora = MoraModel::new(
                                 mora.text().clone(),
                                 mora.consonant().clone(),
                                 *mora.consonant_length(),
                                 mora.vowel().clone(),
                                 *mora.vowel_length(),
-                                f0_list[index + 1],
+                                pitches[index],
                             );
                             index += 1;
                             new_mora
@@ -295,7 +236,7 @@ impl SynthesisEngine {
                             *pause_mora.consonant_length(),
                             pause_mora.vowel().clone(),
                             *pause_mora.vowel_length(),
-                            f0_list[index + 1],
+                            0.,
                         );
                         index += 1;
                         new_pause_mora
@@ -326,11 +267,12 @@ impl SynthesisEngine {
             query.accent_phrases().clone()
         };
 
-        let (flatten_moras, phoneme_data_list) = SynthesisEngine::initial_process(&accent_phrases);
+        let (flatten_moras, phoneme_id_list, _) = SynthesisEngine::initial_process(&accent_phrases);
 
-        let mut phoneme_length_list = vec![pre_phoneme_length];
-        let mut f0_list = vec![0.];
+        let mut durations = vec![pre_phoneme_length];
+        let mut pitches = vec![0.];
         let mut voiced_list = vec![false];
+
         {
             let mut sum_of_f0_bigger_than_zero = 0.;
             let mut count_of_f0_bigger_than_zero = 0;
@@ -338,84 +280,39 @@ impl SynthesisEngine {
             for mora in flatten_moras {
                 let consonant_length = *mora.consonant_length();
                 let vowel_length = *mora.vowel_length();
-                let pitch = *mora.pitch();
-
-                if let Some(consonant_length) = consonant_length {
-                    phoneme_length_list.push(consonant_length);
-                }
-                phoneme_length_list.push(vowel_length);
-
-                let f0_single = pitch * 2.0_f32.powf(pitch_scale);
-                f0_list.push(f0_single);
-
-                let bigger_than_zero = f0_single > 0.;
+                let pitch = *mora.pitch() * 2.0_f32.powf(pitch_scale);
+                pitches.push(pitch);
+                let bigger_than_zero = pitch > 0.;
                 voiced_list.push(bigger_than_zero);
 
                 if bigger_than_zero {
-                    sum_of_f0_bigger_than_zero += f0_single;
+                    sum_of_f0_bigger_than_zero += pitch;
                     count_of_f0_bigger_than_zero += 1;
                 }
+
+                if let Some(consonant_length) = consonant_length {
+                    durations.push(consonant_length / speed_scale);
+                    pitches.push(pitch);
+                    voiced_list.push(bigger_than_zero);
+                }
+                durations.push(vowel_length / speed_scale);
             }
-            phoneme_length_list.push(post_phoneme_length);
-            f0_list.push(0.);
+            durations.push(post_phoneme_length);
+            pitches.push(0.);
             voiced_list.push(false);
             let mean_f0 = sum_of_f0_bigger_than_zero / (count_of_f0_bigger_than_zero as f32);
 
             if !mean_f0.is_nan() {
-                for i in 0..f0_list.len() {
+                for i in 0..pitches.len() {
                     if voiced_list[i] {
-                        f0_list[i] = (f0_list[i] - mean_f0) * intonation_scale + mean_f0;
+                        pitches[i] = (pitches[i] - mean_f0) * intonation_scale + mean_f0;
                     }
                 }
             }
         }
 
-        let (_, _, vowel_indexes) = split_mora(&phoneme_data_list);
-
-        let mut phoneme: Vec<Vec<f32>> = Vec::new();
-        let mut f0: Vec<f32> = Vec::new();
-        {
-            const RATE: f32 = 24000. / 256.;
-            let mut sum_of_phoneme_length = 0;
-            let mut count_of_f0 = 0;
-            let mut vowel_indexes_index = 0;
-
-            for (i, phoneme_length) in phoneme_length_list.iter().enumerate() {
-                // VOICEVOX ENGINEと挙動を合わせるため、四捨五入ではなく偶数丸めをする
-                //
-                // https://github.com/VOICEVOX/voicevox_engine/issues/552
-                let phoneme_length = ((*phoneme_length * RATE).round_ties_even_() / speed_scale)
-                    .round_ties_even_() as usize;
-                let phoneme_id = phoneme_data_list[i].phoneme_id();
-
-                for _ in 0..phoneme_length {
-                    let mut phonemes_vec = vec![0.; OjtPhoneme::num_phoneme()];
-                    phonemes_vec[phoneme_id as usize] = 1.;
-                    phoneme.push(phonemes_vec)
-                }
-                sum_of_phoneme_length += phoneme_length;
-
-                if i as i64 == vowel_indexes[vowel_indexes_index] {
-                    for _ in 0..sum_of_phoneme_length {
-                        f0.push(f0_list[count_of_f0]);
-                    }
-                    count_of_f0 += 1;
-                    sum_of_phoneme_length = 0;
-                    vowel_indexes_index += 1;
-                }
-            }
-        }
-
-        // 2次元のvectorを1次元に変換し、アドレスを連続させる
-        let flatten_phoneme = phoneme.into_iter().flatten().collect::<Vec<_>>();
-
-        self.inference_core_mut().decode(
-            f0.len(),
-            OjtPhoneme::num_phoneme(),
-            &f0,
-            &flatten_phoneme,
-            speaker_id,
-        )
+        self.inference_core_mut()
+            .decode_forward(&phoneme_id_list, &pitches, &durations, speaker_id)
     }
 
     pub fn synthesis_wave_format(
@@ -480,7 +377,9 @@ impl SynthesisEngine {
         self.open_jtalk.dict_loaded()
     }
 
-    fn initial_process(accent_phrases: &[AccentPhraseModel]) -> (Vec<MoraModel>, Vec<OjtPhoneme>) {
+    fn initial_process(
+        accent_phrases: &[AccentPhraseModel],
+    ) -> (Vec<MoraModel>, Vec<i64>, Vec<i64>) {
         let flatten_moras = to_flatten_moras(accent_phrases);
 
         let mut phoneme_strings = vec!["pau".to_string()];
@@ -492,11 +391,46 @@ impl SynthesisEngine {
         }
         phoneme_strings.push("pau".to_string());
 
+        let mut accent_strings = vec!["#".to_string()];
+        for accent_phrase in accent_phrases.iter() {
+            for (i, mora) in accent_phrase.moras().iter().enumerate() {
+                if i + 1 == accent_phrase.accent().to_owned()
+                    && accent_phrase.moras().len() != accent_phrase.accent().to_owned()
+                {
+                    if mora.consonant().is_some() {
+                        accent_strings.push("_".to_string());
+                    }
+                    accent_strings.push("]".to_string());
+                } else {
+                    if mora.consonant().is_some() {
+                        accent_strings.push("_".to_string());
+                    }
+                    if i == 0 {
+                        accent_strings.push("[".to_string());
+                    } else {
+                        accent_strings.push("_".to_string());
+                    }
+                }
+            }
+            if accent_phrase.pause_mora().is_some() {
+                accent_strings.push("_".to_string())
+            }
+            let accent_s_len = accent_strings.len();
+            if accent_phrase.is_interrogative().to_owned() {
+                accent_strings[accent_s_len - 1] = "?".to_string()
+            } else {
+                accent_strings[accent_s_len - 1] = "#".to_string()
+            }
+        }
+        accent_strings.push("#".to_string());
+
         let phoneme_id_list = to_phoneme_id_list(&phoneme_strings);
+        let accent_id_list = to_accent_id_list(&accent_strings);
 
         (flatten_moras, phoneme_id_list, accent_id_list)
     }
 
+    #[allow(dead_code)]
     fn create_one_accent_list(
         accent_list: &mut Vec<i64>,
         accent_phrase: &AccentPhraseModel,
@@ -536,17 +470,26 @@ pub fn to_flatten_moras(accent_phrases: &[AccentPhraseModel]) -> Vec<MoraModel> 
     flatten_moras
 }
 
-pub fn to_phoneme_data_list<T: AsRef<str>>(phoneme_str_list: &[T]) -> Vec<OjtPhoneme> {
-    OjtPhoneme::convert(
+pub fn to_phoneme_id_list<T: AsRef<str>>(phoneme_str_list: &[T]) -> Vec<i64> {
+    let phoneme_data_list = OjtPhoneme::convert(
         phoneme_str_list
             .iter()
             .enumerate()
             .map(|(i, s)| OjtPhoneme::new(s.as_ref().to_string(), i as f32, i as f32 + 1.))
             .collect::<Vec<OjtPhoneme>>()
             .as_slice(),
-    )
+    );
+    phoneme_data_list.iter().map(|d| d.phoneme_id()).collect()
 }
 
+pub fn to_accent_id_list<T: AsRef<str>>(accent_str_list: &[T]) -> Vec<i64> {
+    accent_str_list
+        .iter()
+        .map(|a| Accent::new(a.as_ref().to_string()).accent_id())
+        .collect()
+}
+
+#[allow(dead_code)]
 pub fn split_mora(phoneme_list: &[OjtPhoneme]) -> (Vec<OjtPhoneme>, Vec<OjtPhoneme>, Vec<i64>) {
     let mut vowel_indexes = Vec::new();
     for (i, phoneme) in phoneme_list.iter().enumerate() {
