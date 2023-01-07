@@ -449,9 +449,11 @@ impl InferenceCore {
 
         let length_regulated_vector =
             length_regulator(phoneme_vector.len(), embedded_vector, duration_vector);
+        let new_length = length_regulated_vector.len() / HIDDEN_SIZE;
+
         let mut length_regulated_vector_array = NdArray::new(
             ndarray::arr1(length_regulated_vector.as_slice())
-                .into_shape([1, length_regulated_vector.len()])
+                .into_shape([1, new_length, HIDDEN_SIZE])
                 .unwrap(),
         );
 
