@@ -362,21 +362,21 @@ pub extern "C" fn voicevox_make_default_tts_options() -> VoicevoxTtsOptions {
 /// # Safety
 /// @param output_wav_length 出力先の領域が確保された状態でpointerに渡されていること
 /// @param output_wav は自動で output_wav_length 分のデータが割り当てられるので ::voicevox_wav_free で解放する必要がある
-// #[no_mangle]
-// pub unsafe extern "C" fn voicevox_tts(
-//     text: *const c_char,
-//     speaker_id: u32,
-//     options: VoicevoxTtsOptions,
-//     output_wav_length: *mut usize,
-//     output_wav: *mut *mut u8,
-// ) -> VoicevoxResultCode {
-//     into_result_code_with_error((|| {
-//         let text = ensure_utf8(CStr::from_ptr(text))?;
-//         let output = lock_internal().tts(text, speaker_id, options.into())?;
-//         write_wav_to_ptr(output_wav, output_wav_length, output.as_slice());
-//         Ok(())
-//     })())
-// }
+#[no_mangle]
+pub unsafe extern "C" fn voicevox_tts(
+    text: *const c_char,
+    speaker_id: u32,
+    options: VoicevoxTtsOptions,
+    output_wav_length: *mut usize,
+    output_wav: *mut *mut u8,
+) -> VoicevoxResultCode {
+    into_result_code_with_error((|| {
+        let text = ensure_utf8(CStr::from_ptr(text))?;
+        let output = lock_internal().tts(text, speaker_id, options.into())?;
+        write_wav_to_ptr(output_wav, output_wav_length, output.as_slice());
+        Ok(())
+    })())
+}
 
 /// jsonフォーマットされた AudioQuery データのメモリを解放する
 /// @param [in] audio_query_json 解放する json フォーマットされた AudioQuery データ
