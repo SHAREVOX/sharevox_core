@@ -623,7 +623,13 @@ mod tests {
     #[async_std::test]
     async fn create_accent_phrases_works() {
         let mut core = InferenceCore::new(true, None);
-        core.initialize(false, 0, true).unwrap();
+        core.initialize(
+            Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+            false,
+            0,
+            true,
+        )
+        .unwrap();
         let mut synthesis_engine = SynthesisEngine::new(core, OpenJtalk::initialize());
         let open_jtalk_dic_dir = download_open_jtalk_dict_if_no_exists().await;
 
