@@ -394,8 +394,8 @@ impl SynthesisEngine {
         let mut accent_strings = vec!["#".to_string()];
         for accent_phrase in accent_phrases.iter() {
             for (i, mora) in accent_phrase.moras().iter().enumerate() {
-                if i + 1 == accent_phrase.accent().to_owned()
-                    && accent_phrase.moras().len() != accent_phrase.accent().to_owned()
+                if i + 1 == *accent_phrase.accent()
+                    && accent_phrase.moras().len() != *accent_phrase.accent()
                 {
                     if mora.consonant().is_some() {
                         accent_strings.push("_".to_string());
@@ -416,7 +416,7 @@ impl SynthesisEngine {
                 accent_strings.push("_".to_string())
             }
             let accent_s_len = accent_strings.len();
-            if accent_phrase.is_interrogative().to_owned() {
+            if *accent_phrase.is_interrogative() {
                 accent_strings[accent_s_len - 1] = "?".to_string()
             } else {
                 accent_strings[accent_s_len - 1] = "#".to_string()
