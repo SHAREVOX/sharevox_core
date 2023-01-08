@@ -410,7 +410,7 @@ impl Status {
         embedded_vector: &[f32],
         durations: &[f32],
     ) -> Vec<f32> {
-        let mut int_durations = vec![0 as i64; length];
+        let mut int_durations = vec![0; length];
         for i in 0..length {
             // numpy/pythonのroundと挙動を合わせるため、round_ties_even_を用いている
             let regulation_size = ((durations[i] * 93.75).round_ties_even_() as usize) * 2; // 24000 / 256 = 93.75
