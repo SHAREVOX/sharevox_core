@@ -19,14 +19,15 @@ def main() -> None:
 
     (acceleration_mode, open_jtalk_dict_dir, text, out) = parse_args()
 
-    logger.debug("%s", f"{voicevox_core.METAS=}")
+    # logger.debug("%s", f"{voicevox_core.METAS=}")
     logger.debug("%s", f"{voicevox_core.SUPPORTED_DEVICES=}")
 
     logger.info("%s", f"Initializing ({acceleration_mode=}, {open_jtalk_dict_dir=})")
     core = VoicevoxCore(
-        acceleration_mode=acceleration_mode, open_jtalk_dict_dir=open_jtalk_dict_dir
+        "../../model", acceleration_mode=acceleration_mode, open_jtalk_dict_dir=open_jtalk_dict_dir
     )
 
+    logger.debug("%s", f"{core.metas=}")
     logger.debug("%s", f"{core.is_gpu_mode=}")
 
     logger.info("%s", f"Loading model {SPEAKER_ID}")

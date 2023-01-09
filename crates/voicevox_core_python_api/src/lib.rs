@@ -1,4 +1,7 @@
-use std::{fmt::Display, path::PathBuf};
+use std::{
+    fmt::Display,
+    path::{Path, PathBuf},
+};
 
 use easy_ext::ext;
 use log::debug;
@@ -7,7 +10,7 @@ use pyo3::{
     create_exception,
     exceptions::PyException,
     pyclass, pymethods, pymodule,
-    types::{PyBytes, PyModule},
+    types::{PyBytes, PyList, PyModule},
     FromPyObject as _, PyAny, PyResult, Python,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -21,15 +24,15 @@ use voicevox_core::{
 fn rust(py: Python<'_>, module: &PyModule) -> PyResult<()> {
     pyo3_log::init();
 
-    module.add("METAS", {
-        let class = py.import("voicevox_core")?.getattr("Meta")?.cast_as()?;
-        let meta_from_json = |x: &serde_json::Value| to_pydantic_dataclass(x, class);
-        serde_json::from_str::<Vec<_>>(voicevox_core::METAS)
-            .into_py_result()?
-            .into_iter()
-            .map(|meta| meta_from_json(&meta))
-            .collect::<Result<Vec<_>, _>>()?
-    })?;
+    // module.add("METAS", {
+    //     let class = py.import("voicevox_core")?.getattr("Meta")?.cast_as()?;
+    //     let meta_from_json = |x: &serde_json::Value| to_pydantic_dataclass(x, class);
+    //     serde_json::from_str::<Vec<_>>(voicevox_core::METAS)
+    //         .into_py_result()?
+    //         .into_iter()
+    //         .map(|meta| meta_from_json(&meta))
+    //         .collect::<Result<Vec<_>, _>>()?
+    // })?;
 
     module.add("SUPPORTED_DEVICES", {
         let class = py
@@ -67,17 +70,21 @@ impl VoicevoxCore {
         open_jtalk_dict_dir = "None"
     )]
     fn new(
+        root_dir_path: String,
         #[pyo3(from_py_with = "from_acceleration_mode")] acceleration_mode: AccelerationMode,
         cpu_num_threads: u16,
         load_all_models: bool,
         #[pyo3(from_py_with = "from_optional_utf8_path")] open_jtalk_dict_dir: Option<String>,
     ) -> PyResult<Self> {
-        let inner = voicevox_core::VoicevoxCore::new_with_initialize(InitializeOptions {
-            acceleration_mode,
-            cpu_num_threads,
-            load_all_models,
-            open_jtalk_dict_dir: open_jtalk_dict_dir.map(Into::into),
-        })
+        let inner = voicevox_core::VoicevoxCore::new_with_initialize(
+            Path::new(&root_dir_path),
+            InitializeOptions {
+                acceleration_mode,
+                cpu_num_threads,
+                load_all_models,
+                open_jtalk_dict_dir: open_jtalk_dict_dir.map(Into::into),
+            },
+        )
         .into_py_result()?;
         Ok(Self { inner })
     }
@@ -91,6 +98,19 @@ impl VoicevoxCore {
         self.inner.is_gpu_mode()
     }
 
+    #[getter]
+    fn metas<'py>(&mut self, py: Python<'py>) -> PyResult<&'py PyList> {
+        let class = py.import("voicevox_core")?.getattr("Meta")?.cast_as()?;
+        let metas = self.inner.get_metas_json().to_str()?;
+        let meta_from_json = |x: &serde_json::Value| to_pydantic_dataclass(x, class);
+        let metas_vector = serde_json::from_str::<Vec<_>>(metas)
+            .into_py_result()?
+            .into_iter()
+            .map(|meta| meta_from_json(&meta))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(PyList::new(py, metas_vector))
+    }
+
     fn load_model(&mut self, speaker_id: u32) -> PyResult<()> {
         self.inner.load_model(speaker_id).into_py_result()
     }
@@ -99,64 +119,41 @@ impl VoicevoxCore {
         self.inner.is_model_loaded(speaker_id)
     }
 
-    fn predict_duration<'py>(
+    fn variance_forward<'py>(
         &mut self,
         phoneme_vector: &'py PyArray<i64, Ix1>,
+        accent_vector: &'py PyArray<i64, Ix1>,
         speaker_id: u32,
         py: Python<'py>,
-    ) -> PyResult<&'py PyArray<f32, Ix1>> {
-        let duration = self
+    ) -> PyResult<(&'py PyArray<f32, Ix1>, &'py PyArray<f32, Ix1>)> {
+        let (pitch, duration) = self
             .inner
-            .predict_duration(&phoneme_vector.to_vec()?, speaker_id)
-            .into_py_result()?;
-        Ok(PyArray::from_vec(py, duration))
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn predict_intonation<'py>(
-        &mut self,
-        length: usize,
-        vowel_phoneme_vector: &'py PyArray<i64, Ix1>,
-        consonant_phoneme_vector: &'py PyArray<i64, Ix1>,
-        start_accent_vector: &'py PyArray<i64, Ix1>,
-        end_accent_vector: &'py PyArray<i64, Ix1>,
-        start_accent_phrase_vector: &'py PyArray<i64, Ix1>,
-        end_accent_phrase_vector: &'py PyArray<i64, Ix1>,
-        speaker_id: u32,
-        py: Python<'py>,
-    ) -> PyResult<&'py PyArray<f32, Ix1>> {
-        let intonation = self
-            .inner
-            .predict_intonation(
-                length,
-                &vowel_phoneme_vector.to_vec()?,
-                &consonant_phoneme_vector.to_vec()?,
-                &start_accent_vector.to_vec()?,
-                &end_accent_vector.to_vec()?,
-                &start_accent_phrase_vector.to_vec()?,
-                &end_accent_phrase_vector.to_vec()?,
+            .variance_forward(
+                &phoneme_vector.to_vec()?,
+                &accent_vector.to_vec()?,
                 speaker_id,
             )
             .into_py_result()?;
-        Ok(PyArray::from_vec(py, intonation))
+        Ok((
+            PyArray::from_vec(py, pitch),
+            PyArray::from_vec(py, duration),
+        ))
     }
 
-    fn decode<'py>(
+    fn decode_forward<'py>(
         &mut self,
-        length: usize,
-        phoneme_size: usize,
-        f0: &'py PyArray<f32, Ix1>,
-        phoneme: &'py PyArray<f32, Ix1>,
+        phoneme_vector: &'py PyArray<i64, Ix1>,
+        pitch_vector: &'py PyArray<f32, Ix1>,
+        duration_vector: &'py PyArray<f32, Ix1>,
         speaker_id: u32,
         py: Python<'py>,
     ) -> PyResult<&'py PyArray<f32, Ix1>> {
         let decoded = self
             .inner
-            .decode(
-                length,
-                phoneme_size,
-                &f0.to_vec()?,
-                &phoneme.to_vec()?,
+            .decode_forward(
+                &phoneme_vector.to_vec()?,
+                &pitch_vector.to_vec()?,
+                &duration_vector.to_vec()?,
                 speaker_id,
             )
             .into_py_result()?;

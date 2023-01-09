@@ -6,13 +6,14 @@ from numpy.typing import NDArray
 
 from voicevox_core import AccelerationMode, AudioQuery, Meta, SupportedDevices
 
-METAS: Final[List[Meta]]
+# METAS: Final[List[Meta]]
 SUPPORTED_DEVICES: Final[SupportedDevices]
 __version__: str
 
 class VoicevoxCore:
     def __init__(
         self,
+        root_dir_path: Union[Path, str],
         acceleration_mode: Union[
             AccelerationMode, Literal["AUTO", "CPU", "GPU"]
         ] = AccelerationMode.AUTO,
@@ -41,6 +42,14 @@ class VoicevoxCore:
         Returns
         -------
         GPUモードならtrue、そうでないならfalse
+        """
+        ...
+    def metas(self) -> List[Meta]:
+        """メタデータ一覧を返す
+
+        Returns
+        -------
+        メタデータ
         """
         ...
     def load_model(self, speaker_id: int) -> None:
