@@ -526,4 +526,58 @@ mod tests {
             "model should be loaded"
         );
     }
+
+    #[rstest]
+    fn status_get_library_uuid_from_speaker_id_works() {
+        let mut status = Status::new(
+            Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+            false,
+            0,
+        );
+        let result = status.load();
+        assert_eq!(Ok(()), result);
+        let result = status.get_library_uuid_from_speaker_id(0);
+        assert!(result.is_some());
+        assert!(result.unwrap() == "test");
+        let result = status.get_library_uuid_from_speaker_id(1);
+        assert!(result.is_some());
+        assert!(result.unwrap() == "gaussian_test");
+        let result = status.get_library_uuid_from_speaker_id(100);
+        assert!(result.is_none());
+    }
+
+    #[rstest]
+    fn status_length_regulator_works() {
+        let mut status = Status::new(
+            Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+            false,
+            0,
+        );
+        let mut embedded_vector = vec![0.; 192];
+        embedded_vector.append(&mut vec![1.; 192]);
+        // round(0.11 * 93.75) = 10, round(0.21 * 93.75) = 20
+        let durations = vec![0.11, 0.21];
+        let result = status.length_regulator(2, &embedded_vector, &durations);
+        let mut expected = vec![0.; 192 * 10 * 2];
+        assert_eq!(result.len(), 192 * 30 * 2);
+        expected.append(&mut vec![1.; 192 * 20 * 2]);
+        assert_eq!(result, expected);
+    }
+
+    #[rstest]
+    fn status_gaussian_upsampling_works() {
+        let mut status = Status::new(
+            Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+            false,
+            0,
+        );
+        let result = status.load();
+        assert_eq!(Ok(()), result);
+        let mut embedded_vector = vec![0.; 192];
+        embedded_vector.append(&mut vec![1.; 192]);
+        // round(0.11 * 93.75) = 10, round(0.21 * 93.75) = 20
+        let durations = vec![0.11, 0.21];
+        let result = status.gaussian_upsampling(2, &embedded_vector, &durations);
+        assert_eq!(result.len(), 192 * 30 * 2);
+    }
 }
