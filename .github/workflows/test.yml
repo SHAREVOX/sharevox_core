@@ -63,9 +63,8 @@ jobs:
         with:
           python-version: "3.8"
       - uses: Swatinem/rust-cache@v2
-      # FIXME: voicevox_core_python_apiがビルド不可となっている関係でclippyのチェックを不完全にしている
-      - run: cargo clippy -vv --all-features --features onnxruntime/disable-sys-build-script -p voicevox_core -p voicevox_core_c_api -p xtask --tests -- -D clippy::all -D warnings --no-deps
-      - run: cargo clippy -vv --all-features --features onnxruntime/disable-sys-build-script -p voicevox_core -p voicevox_core_c_api -p xtask -- -D clippy::all -D warnings --no-deps
+      - run: cargo clippy -vv --all-features --features onnxruntime/disable-sys-build-script --tests -- -D clippy::all -D warnings --no-deps
+      - run: cargo clippy -vv --all-features --features onnxruntime/disable-sys-build-script -- -D clippy::all -D warnings --no-deps
       - run: cargo fmt -- --check
 
   rust-test:
@@ -104,18 +103,7 @@ jobs:
           key: "v2-cargo-test-cache-${{ matrix.features }}-${{ matrix.os }}"
       - name: Run cargo test
         shell: bash
-        # FIXME: voicevox_core_python_apiがビルド不可となっている関係でテスト対象から除外している
-        # run: cargo test -vv --features ,${{ matrix.features }}
-        run: |
-          cd crates/voicevox_core
-          cargo test -vv --features ,${{ matrix.features }}
-          cd -
-          cd crates/voicevox_core_c_api
-          cargo test -vv --features ,${{ matrix.features }}
-          cd -
-          cd crates/xtask
-          cargo test -vv
-          cd -
+        run: cargo test -vv --features ,${{ matrix.features }}
 
   xtask-generate-c-header:
     runs-on: ubuntu-latest
