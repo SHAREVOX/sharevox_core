@@ -13,18 +13,18 @@ jobs:
           submodules: true
       - name: Set up Rust
         uses: ./.github/actions/rust-toolchain-from-file
-      # - name: Set up Python
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: "3.8"
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
       - name: Install cargo-binstall
         uses: taiki-e/install-action@cargo-binstall
       - name: Install cbindgen
         uses: ./.github/actions/cargo-binstall-cbindgen
-      # - name: Create a venv
-      #   uses: ./.github/actions/create-venv
-      # - name: pip install
-      #   run: pip install -r ./crates/voicevox_core_python_api/requirements.txt
+      - name: Create a venv
+        uses: ./.github/actions/create-venv
+      - name: pip install
+        run: pip install -r ./crates/voicevox_core_python_api/requirements.txt
       - name: Generate C header file
         run: cbindgen --crate voicevox_core_c_api -o ./docs/apis/c_api/doxygen/voicevox_core.h
       - name: mkdir public
@@ -35,16 +35,16 @@ jobs:
         uses: mattnotmitt/doxygen-action@v1.9.4
         with:
           working-directory: "docs/apis/c_api/doxygen"
-      # - name: Build voicevox_core_python_api
-      #   run: |
-      #     cargo build -p voicevox_core_c_api -vv
-      #     maturin develop --manifest-path ./crates/voicevox_core_python_api/Cargo.toml --locked
-      # - name: Generate Sphinx document
-      #   run: sphinx-build docs/apis/python_api public/apis/python_api
-      # - name: Uplaod api document
-      #   uses: actions/upload-pages-artifact@v1
-      #   with:
-      #     path: public
+      - name: Build voicevox_core_python_api
+        run: |
+          cargo build -p voicevox_core_c_api -vv
+          maturin develop --manifest-path ./crates/voicevox_core_python_api/Cargo.toml --locked
+      - name: Generate Sphinx document
+        run: sphinx-build docs/apis/python_api public/apis/python_api
+      - name: Uplaod api document
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: public
   deploy_api_github_pages:
     runs-on: ubuntu-latest
     needs:
