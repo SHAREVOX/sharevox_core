@@ -19,6 +19,8 @@ use voicevox_core::{
     TtsOptions,
 };
 
+type VarianceForward<'py> = PyResult<(&'py PyArray<f32, Ix1>, &'py PyArray<f32, Ix1>)>;
+
 #[pymodule]
 #[pyo3(name = "_rust")]
 fn rust(py: Python<'_>, module: &PyModule) -> PyResult<()> {
@@ -125,7 +127,7 @@ impl VoicevoxCore {
         accent_vector: &'py PyArray<i64, Ix1>,
         speaker_id: u32,
         py: Python<'py>,
-    ) -> PyResult<(&'py PyArray<f32, Ix1>, &'py PyArray<f32, Ix1>)> {
+    ) -> VarianceForward<'py> {
         let (pitch, duration) = self
             .inner
             .variance_forward(
