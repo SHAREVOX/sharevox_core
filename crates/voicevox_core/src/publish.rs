@@ -545,313 +545,326 @@ fn list_windows_video_cards() {
     }
 }
 
-// TODO: テストを実装する
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use pretty_assertions::assert_eq;
-//
-//     #[rstest]
-//     fn finalize_works() {
-//         let internal = VoicevoxCore::new_with_mutex();
-//         let result = internal
-//             .lock()
-//             .unwrap()
-//             .initialize(InitializeOptions::default());
-//         assert_eq!(Ok(()), result);
-//         internal.lock().unwrap().finalize();
-//         assert_eq!(
-//             false,
-//             internal
-//                 .lock()
-//                 .unwrap()
-//                 .synthesis_engine
-//                 .inference_core()
-//                 .initialized
-//         );
-//         assert_eq!(
-//             true,
-//             internal
-//                 .lock()
-//                 .unwrap()
-//                 .synthesis_engine
-//                 .inference_core()
-//                 .status_option
-//                 .is_none()
-//         );
-//     }
-//
-//     #[rstest]
-//     #[case(0, Err(Error::UninitializedStatus), Ok(()))]
-//     #[case(1, Err(Error::UninitializedStatus), Ok(()))]
-//     #[case(999, Err(Error::UninitializedStatus), Err(Error::InvalidSpeakerId{speaker_id:999}))]
-//     fn load_model_works(
-//         #[case] speaker_id: u32,
-//         #[case] expected_result_at_uninitialized: Result<()>,
-//         #[case] expected_result_at_initialized: Result<()>,
-//     ) {
-//         let internal = VoicevoxCore::new_with_mutex();
-//         let result = internal.lock().unwrap().load_model(speaker_id);
-//         assert_eq!(expected_result_at_uninitialized, result);
-//
-//         internal
-//             .lock()
-//             .unwrap()
-//             .initialize(InitializeOptions {
-//                 acceleration_mode: AccelerationMode::Cpu,
-//                 ..Default::default()
-//             })
-//             .unwrap();
-//         let result = internal.lock().unwrap().load_model(speaker_id);
-//         assert_eq!(
-//             expected_result_at_initialized, result,
-//             "got load_model result"
-//         );
-//     }
-//
-//     #[rstest]
-//     fn is_use_gpu_works() {
-//         let internal = VoicevoxCore::new_with_mutex();
-//         assert_eq!(false, internal.lock().unwrap().is_gpu_mode());
-//         internal
-//             .lock()
-//             .unwrap()
-//             .initialize(InitializeOptions {
-//                 acceleration_mode: AccelerationMode::Cpu,
-//                 ..Default::default()
-//             })
-//             .unwrap();
-//         assert_eq!(false, internal.lock().unwrap().is_gpu_mode());
-//     }
-//
-//     #[rstest]
-//     #[case(0, true)]
-//     #[case(1, true)]
-//     #[case(999, false)]
-//     fn is_model_loaded_works(#[case] speaker_id: u32, #[case] expected: bool) {
-//         let internal = VoicevoxCore::new_with_mutex();
-//         assert!(
-//             !internal.lock().unwrap().is_model_loaded(speaker_id),
-//             "expected is_model_loaded to return false, but got true",
-//         );
-//
-//         internal
-//             .lock()
-//             .unwrap()
-//             .initialize(InitializeOptions {
-//                 acceleration_mode: AccelerationMode::Cpu,
-//                 ..Default::default()
-//             })
-//             .unwrap();
-//         assert!(
-//             !internal.lock().unwrap().is_model_loaded(speaker_id),
-//             "expected is_model_loaded to return false, but got true",
-//         );
-//
-//         internal
-//             .lock()
-//             .unwrap()
-//             .load_model(speaker_id)
-//             .unwrap_or(());
-//         assert_eq!(
-//             internal.lock().unwrap().is_model_loaded(speaker_id),
-//             expected,
-//             "expected is_model_loaded return value against speaker_id `{}` is `{}`, but got `{}`",
-//             speaker_id,
-//             expected,
-//             !expected
-//         );
-//     }
-//
-//     #[rstest]
-//     fn supported_devices_works() {
-//         let internal = VoicevoxCore::new_with_mutex();
-//         let cstr_result = internal.lock().unwrap().get_supported_devices_json();
-//         assert!(cstr_result.to_str().is_ok(), "{:?}", cstr_result);
-//
-//         let json_result: std::result::Result<SupportedDevices, _> =
-//             serde_json::from_str(cstr_result.to_str().unwrap());
-//         assert!(json_result.is_ok(), "{:?}", json_result);
-//     }
-//
-//     #[rstest]
-//     #[case(0, Some((0,0)))]
-//     #[case(1, Some((0,1)))]
-//     #[case(999, None)]
-//     fn get_model_index_and_speaker_id_works(
-//         #[case] speaker_id: u32,
-//         #[case] expected: Option<(usize, u32)>,
-//     ) {
-//         let actual = get_model_index_and_speaker_id(speaker_id);
-//         assert_eq!(expected, actual);
-//     }
-//
-//     #[rstest]
-//     fn predict_duration_works() {
-//         let internal = VoicevoxCore::new_with_mutex();
-//         internal
-//             .lock()
-//             .unwrap()
-//             .initialize(InitializeOptions {
-//                 load_all_models: true,
-//                 acceleration_mode: AccelerationMode::Cpu,
-//                 ..Default::default()
-//             })
-//             .unwrap();
-//
-//         // 「こんにちは、音声合成の世界へようこそ」という文章を変換して得た phoneme_vector
-//         let phoneme_vector = [
-//             0, 23, 30, 4, 28, 21, 10, 21, 42, 7, 0, 30, 4, 35, 14, 14, 16, 30, 30, 35, 14, 14, 28,
-//             30, 35, 14, 23, 7, 21, 14, 43, 30, 30, 23, 30, 35, 30, 0,
-//         ];
-//
-//         let result = internal
-//             .lock()
-//             .unwrap()
-//             .predict_duration(&phoneme_vector, 0);
-//
-//         assert!(result.is_ok(), "{:?}", result);
-//         assert_eq!(result.unwrap().len(), phoneme_vector.len());
-//     }
-//
-//     #[rstest]
-//     fn predict_intonation_works() {
-//         let internal = VoicevoxCore::new_with_mutex();
-//         internal
-//             .lock()
-//             .unwrap()
-//             .initialize(InitializeOptions {
-//                 load_all_models: true,
-//                 acceleration_mode: AccelerationMode::Cpu,
-//                 ..Default::default()
-//             })
-//             .unwrap();
-//
-//         // 「テスト」という文章に対応する入力
-//         let vowel_phoneme_vector = [0, 14, 6, 30, 0];
-//         let consonant_phoneme_vector = [-1, 37, 35, 37, -1];
-//         let start_accent_vector = [0, 1, 0, 0, 0];
-//         let end_accent_vector = [0, 1, 0, 0, 0];
-//         let start_accent_phrase_vector = [0, 1, 0, 0, 0];
-//         let end_accent_phrase_vector = [0, 0, 0, 1, 0];
-//
-//         let result = internal.lock().unwrap().predict_intonation(
-//             vowel_phoneme_vector.len(),
-//             &vowel_phoneme_vector,
-//             &consonant_phoneme_vector,
-//             &start_accent_vector,
-//             &end_accent_vector,
-//             &start_accent_phrase_vector,
-//             &end_accent_phrase_vector,
-//             0,
-//         );
-//
-//         assert!(result.is_ok(), "{:?}", result);
-//         assert_eq!(result.unwrap().len(), vowel_phoneme_vector.len());
-//     }
-//
-//     #[rstest]
-//     fn decode_works() {
-//         let internal = VoicevoxCore::new_with_mutex();
-//         internal
-//             .lock()
-//             .unwrap()
-//             .initialize(InitializeOptions {
-//                 acceleration_mode: AccelerationMode::Cpu,
-//                 load_all_models: true,
-//                 ..Default::default()
-//             })
-//             .unwrap();
-//
-//         // 「テスト」という文章に対応する入力
-//         const F0_LENGTH: usize = 69;
-//         let mut f0 = [0.; F0_LENGTH];
-//         f0[9..24].fill(5.905218);
-//         f0[37..60].fill(5.565851);
-//
-//         const PHONEME_SIZE: usize = 45;
-//         let mut phoneme = [0.; PHONEME_SIZE * F0_LENGTH];
-//         let mut set_one = |index, range| {
-//             for i in range {
-//                 phoneme[i * PHONEME_SIZE + index] = 1.;
-//             }
-//         };
-//         set_one(0, 0..9);
-//         set_one(37, 9..13);
-//         set_one(14, 13..24);
-//         set_one(35, 24..30);
-//         set_one(6, 30..37);
-//         set_one(37, 37..45);
-//         set_one(30, 45..60);
-//         set_one(0, 60..69);
-//
-//         let result = internal
-//             .lock()
-//             .unwrap()
-//             .decode(F0_LENGTH, PHONEME_SIZE, &f0, &phoneme, 0);
-//
-//         assert!(result.is_ok(), "{:?}", result);
-//         assert_eq!(result.unwrap().len(), F0_LENGTH * 256);
-//     }
-//
-//     #[rstest]
-//     #[async_std::test]
-//     async fn audio_query_works() {
-//         let open_jtalk_dic_dir = download_open_jtalk_dict_if_no_exists().await;
-//
-//         let core = VoicevoxCore::new_with_mutex();
-//         core.lock()
-//             .unwrap()
-//             .initialize(InitializeOptions {
-//                 acceleration_mode: AccelerationMode::Cpu,
-//                 load_all_models: true,
-//                 open_jtalk_dict_dir: Some(open_jtalk_dic_dir),
-//                 ..Default::default()
-//             })
-//             .unwrap();
-//
-//         let query = core
-//             .lock()
-//             .unwrap()
-//             .audio_query("これはテストです", 0, Default::default())
-//             .unwrap();
-//
-//         assert_eq!(query.accent_phrases().len(), 2);
-//
-//         assert_eq!(query.accent_phrases()[0].moras().len(), 3);
-//         for (i, (text, consonant, vowel)) in [("コ", "k", "o"), ("レ", "r", "e"), ("ワ", "w", "a")]
-//             .iter()
-//             .enumerate()
-//         {
-//             let mora = query.accent_phrases()[0].moras().get(i).unwrap();
-//             assert_eq!(mora.text(), text);
-//             assert_eq!(mora.consonant(), &Some(consonant.to_string()));
-//             assert_eq!(mora.vowel(), vowel);
-//         }
-//         assert_eq!(query.accent_phrases()[0].accent(), &3);
-//
-//         assert_eq!(query.accent_phrases()[1].moras().len(), 5);
-//         for (i, (text, consonant, vowel)) in [
-//             ("テ", "t", "e"),
-//             ("ス", "s", "U"),
-//             ("ト", "t", "o"),
-//             ("デ", "d", "e"),
-//             ("ス", "s", "U"),
-//         ]
-//         .iter()
-//         .enumerate()
-//         {
-//             let mora = query.accent_phrases()[1].moras().get(i).unwrap();
-//             assert_eq!(mora.text(), text);
-//             assert_eq!(mora.consonant(), &Some(consonant.to_string()));
-//             assert_eq!(mora.vowel(), vowel);
-//         }
-//         assert_eq!(query.accent_phrases()[1].accent(), &1);
-//         assert_eq!(query.kana(), "コレワ'/テ'_ストデ_ス");
-//     }
-//
-//     #[rstest]
-//     fn get_version_works() {
-//         assert_eq!("0.0.0", VoicevoxCore::get_version());
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use numerics::F32Ext as _;
+    use pretty_assertions::assert_eq;
+
+    #[rstest]
+    fn finalize_works() {
+        let internal = VoicevoxCore::new_with_mutex();
+        let result = internal.lock().unwrap().initialize(
+            Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+            InitializeOptions::default(),
+        );
+        assert_eq!(Ok(()), result);
+        internal.lock().unwrap().finalize();
+        assert_eq!(
+            false,
+            internal
+                .lock()
+                .unwrap()
+                .synthesis_engine
+                .inference_core()
+                .initialized
+        );
+        assert_eq!(
+            true,
+            internal
+                .lock()
+                .unwrap()
+                .synthesis_engine
+                .inference_core()
+                .status_option
+                .is_none()
+        );
+    }
+
+    #[rstest]
+    #[case(0, Err(Error::UninitializedStatus), Ok(()))]
+    #[case(1, Err(Error::UninitializedStatus), Ok(()))]
+    #[case(999, Err(Error::UninitializedStatus), Err(Error::InvalidSpeakerId{speaker_id:999}))]
+    fn load_model_works(
+        #[case] speaker_id: u32,
+        #[case] expected_result_at_uninitialized: Result<()>,
+        #[case] expected_result_at_initialized: Result<()>,
+    ) {
+        let internal = VoicevoxCore::new_with_mutex();
+        let result = internal.lock().unwrap().load_model(speaker_id);
+        assert_eq!(expected_result_at_uninitialized, result);
+
+        internal
+            .lock()
+            .unwrap()
+            .initialize(
+                Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+                InitializeOptions {
+                    acceleration_mode: AccelerationMode::Cpu,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        let result = internal.lock().unwrap().load_model(speaker_id);
+        assert_eq!(
+            expected_result_at_initialized, result,
+            "got load_model result"
+        );
+    }
+
+    #[rstest]
+    fn is_use_gpu_works() {
+        let internal = VoicevoxCore::new_with_mutex();
+        assert_eq!(false, internal.lock().unwrap().is_gpu_mode());
+        internal
+            .lock()
+            .unwrap()
+            .initialize(
+                Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+                InitializeOptions {
+                    acceleration_mode: AccelerationMode::Cpu,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(false, internal.lock().unwrap().is_gpu_mode());
+    }
+
+    #[rstest]
+    #[case(0, true)]
+    #[case(1, true)]
+    #[case(999, false)]
+    fn is_model_loaded_works(#[case] speaker_id: u32, #[case] expected: bool) {
+        let internal = VoicevoxCore::new_with_mutex();
+        assert!(
+            !internal.lock().unwrap().is_model_loaded(speaker_id),
+            "expected is_model_loaded to return false, but got true",
+        );
+
+        internal
+            .lock()
+            .unwrap()
+            .initialize(
+                Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+                InitializeOptions {
+                    acceleration_mode: AccelerationMode::Cpu,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert!(
+            !internal.lock().unwrap().is_model_loaded(speaker_id),
+            "expected is_model_loaded to return false, but got true",
+        );
+
+        internal
+            .lock()
+            .unwrap()
+            .load_model(speaker_id)
+            .unwrap_or(());
+        assert_eq!(
+            internal.lock().unwrap().is_model_loaded(speaker_id),
+            expected,
+            "expected is_model_loaded return value against speaker_id `{}` is `{}`, but got `{}`",
+            speaker_id,
+            expected,
+            !expected
+        );
+    }
+
+    #[rstest]
+    fn supported_devices_works() {
+        let internal = VoicevoxCore::new_with_mutex();
+        let cstr_result = internal.lock().unwrap().get_supported_devices_json();
+        assert!(cstr_result.to_str().is_ok(), "{:?}", cstr_result);
+
+        let json_result: std::result::Result<SupportedDevices, _> =
+            serde_json::from_str(cstr_result.to_str().unwrap());
+        assert!(json_result.is_ok(), "{:?}", json_result);
+    }
+
+    // #[rstest]
+    // #[case(0, Some((0,0)))]
+    // #[case(1, Some((0,1)))]
+    // #[case(999, None)]
+    // fn get_model_index_and_speaker_id_works(
+    //     #[case] speaker_id: u32,
+    //     #[case] expected: Option<(usize, u32)>,
+    // ) {
+    //     let actual = get_model_index_and_speaker_id(speaker_id);
+    //     assert_eq!(expected, actual);
+    // }
+
+    #[rstest]
+    fn variance_forward_works() {
+        let internal = VoicevoxCore::new_with_mutex();
+        internal
+            .lock()
+            .unwrap()
+            .initialize(
+                Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+                InitializeOptions {
+                    load_all_models: true,
+                    acceleration_mode: AccelerationMode::Cpu,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+
+        // 「こんにちは、音声合成の世界へようこそ」という文章を変換して得た phoneme_vector
+        let phoneme_vector = [
+            0, 23, 30, 4, 28, 21, 10, 21, 42, 7, 0, 30, 4, 35, 14, 14, 16, 30, 30, 35, 14, 14, 28,
+            30, 35, 14, 23, 7, 21, 14, 43, 30, 30, 23, 30, 35, 30, 0,
+        ];
+        let accent_vector = vec![0; phoneme_vector.len()];
+
+        let result = internal
+            .lock()
+            .unwrap()
+            .variance_forward(&phoneme_vector, &accent_vector, 0);
+
+        assert!(result.is_ok(), "{:?}", result);
+
+        let (pitch, duration) = result.unwrap();
+        assert_eq!(pitch.len(), phoneme_vector.len());
+        assert_eq!(duration.len(), phoneme_vector.len());
+    }
+
+    // #[rstest]
+    // fn predict_intonation_works() {
+    //     let internal = VoicevoxCore::new_with_mutex();
+    //     internal
+    //         .lock()
+    //         .unwrap()
+    //         .initialize(InitializeOptions {
+    //             load_all_models: true,
+    //             acceleration_mode: AccelerationMode::Cpu,
+    //             ..Default::default()
+    //         })
+    //         .unwrap();
+
+    //     // 「テスト」という文章に対応する入力
+    //     let vowel_phoneme_vector = [0, 14, 6, 30, 0];
+    //     let consonant_phoneme_vector = [-1, 37, 35, 37, -1];
+    //     let start_accent_vector = [0, 1, 0, 0, 0];
+    //     let end_accent_vector = [0, 1, 0, 0, 0];
+    //     let start_accent_phrase_vector = [0, 1, 0, 0, 0];
+    //     let end_accent_phrase_vector = [0, 0, 0, 1, 0];
+
+    //     let result = internal.lock().unwrap().predict_intonation(
+    //         vowel_phoneme_vector.len(),
+    //         &vowel_phoneme_vector,
+    //         &consonant_phoneme_vector,
+    //         &start_accent_vector,
+    //         &end_accent_vector,
+    //         &start_accent_phrase_vector,
+    //         &end_accent_phrase_vector,
+    //         0,
+    //     );
+
+    //     assert!(result.is_ok(), "{:?}", result);
+    //     assert_eq!(result.unwrap().len(), vowel_phoneme_vector.len());
+    // }
+
+    #[rstest]
+    fn decode_forward_works() {
+        let internal = VoicevoxCore::new_with_mutex();
+        internal
+            .lock()
+            .unwrap()
+            .initialize(
+                Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+                InitializeOptions {
+                    acceleration_mode: AccelerationMode::Cpu,
+                    load_all_models: true,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+
+        // 「こんにちは、音声合成の世界へようこそ」という文章を変換して得た phoneme_vector
+        let phoneme_vector = [
+            0, 23, 30, 4, 28, 21, 10, 21, 42, 7, 0, 30, 4, 35, 14, 14, 16, 30, 30, 35, 14, 14, 28,
+            30, 35, 14, 23, 7, 21, 14, 43, 30, 30, 23, 30, 35, 30, 0,
+        ];
+        let pitch_vector = vec![5.5; phoneme_vector.len()];
+        let duration_vector = vec![0.1; phoneme_vector.len()];
+
+        let result = internal.lock().unwrap().decode_forward(
+            &phoneme_vector,
+            &pitch_vector,
+            &duration_vector,
+            0,
+        );
+
+        assert!(result.is_ok(), "{:?}", result);
+        assert_eq!(
+            result.unwrap().len(),
+            (0.1 * 93.75).round_ties_even_() as usize * 512 * phoneme_vector.len()
+        );
+    }
+
+    #[rstest]
+    #[async_std::test]
+    async fn audio_query_works() {
+        let open_jtalk_dic_dir = download_open_jtalk_dict_if_no_exists().await;
+
+        let core = VoicevoxCore::new_with_mutex();
+        core.lock()
+            .unwrap()
+            .initialize(
+                Path::new(concat!(env!("CARGO_WORKSPACE_DIR"), "/model/")),
+                InitializeOptions {
+                    acceleration_mode: AccelerationMode::Cpu,
+                    load_all_models: true,
+                    open_jtalk_dict_dir: Some(open_jtalk_dic_dir),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+
+        let query = core
+            .lock()
+            .unwrap()
+            .audio_query("これはテストです", 0, Default::default())
+            .unwrap();
+
+        assert_eq!(query.accent_phrases().len(), 2);
+
+        assert_eq!(query.accent_phrases()[0].moras().len(), 3);
+        for (i, (text, consonant, vowel)) in [("コ", "k", "o"), ("レ", "r", "e"), ("ワ", "w", "a")]
+            .iter()
+            .enumerate()
+        {
+            let mora = query.accent_phrases()[0].moras().get(i).unwrap();
+            assert_eq!(mora.text(), text);
+            assert_eq!(mora.consonant(), &Some(consonant.to_string()));
+            assert_eq!(mora.vowel(), vowel);
+        }
+        assert_eq!(query.accent_phrases()[0].accent(), &3);
+
+        assert_eq!(query.accent_phrases()[1].moras().len(), 5);
+        for (i, (text, consonant, vowel)) in [
+            ("テ", "t", "e"),
+            ("ス", "s", "U"),
+            ("ト", "t", "o"),
+            ("デ", "d", "e"),
+            ("ス", "s", "U"),
+        ]
+        .iter()
+        .enumerate()
+        {
+            let mora = query.accent_phrases()[1].moras().get(i).unwrap();
+            assert_eq!(mora.text(), text);
+            assert_eq!(mora.consonant(), &Some(consonant.to_string()));
+            assert_eq!(mora.vowel(), vowel);
+        }
+        assert_eq!(query.accent_phrases()[1].accent(), &1);
+        assert_eq!(query.kana(), "コレワ'/テ'_ストデ_ス");
+    }
+
+    #[rstest]
+    fn get_version_works() {
+        assert_eq!("0.0.0", VoicevoxCore::get_version());
+    }
+}
