@@ -419,7 +419,7 @@ impl Status {
 
         let mut embedded_vector_array = NdArray::new(
             ndarray::arr1(embedded_vector)
-                .into_shape([1, embedded_vector.len(), Status::HIDDEN_SIZE])
+                .into_shape([1, durations.len(), Status::HIDDEN_SIZE])
                 .unwrap(),
         );
         let mut duration_vector_array = NdArray::new(
