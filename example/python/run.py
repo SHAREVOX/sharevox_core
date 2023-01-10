@@ -4,6 +4,7 @@ import core
 
 
 def run(
+    root_dir_path: str,
     use_gpu: bool,
     text: str,
     speaker_id: int,
@@ -11,7 +12,7 @@ def run(
     openjtalk_dict: str
 ) -> None:
     # コアの初期化
-    core.initialize(use_gpu, cpu_num_threads, load_all_models=False)
+    core.initialize(root_dir_path, use_gpu, cpu_num_threads, load_all_models=False)
 
     # openjtalk辞書のロード
     core.voicevox_load_openjtalk_dict(openjtalk_dict)
@@ -34,6 +35,7 @@ def run(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--root_dir_path",  type=str, default="../../model")
     parser.add_argument("--use_gpu", action="store_true")
     parser.add_argument("--text", required=True)
     parser.add_argument("--speaker_id", type=int, required=True)

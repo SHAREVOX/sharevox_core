@@ -11,6 +11,7 @@ int64_dim1_type = numpy.ctypeslib.ndpointer(dtype=numpy.int64, ndim=1)
 float32_dim1_type = numpy.ctypeslib.ndpointer(dtype=numpy.float32, ndim=1)
 int64_dim2_type = numpy.ctypeslib.ndpointer(dtype=numpy.int64, ndim=2)
 float32_dim2_type = numpy.ctypeslib.ndpointer(dtype=numpy.float32, ndim=2)
+array = numpy.ndarray
 
 get_os = platform.system()
 
@@ -44,16 +45,12 @@ lib.metas.restype = c_char_p
 
 lib.supported_devices.restype = c_char_p
 
-lib.yukarin_s_forward.argtypes = (
-    c_int64, int64_dim1_type, int64_dim1_type, float32_dim1_type)
-lib.yukarin_s_forward.restype = c_bool
-
-lib.yukarin_sa_forward.argtypes = (c_int64, int64_dim2_type, int64_dim2_type, int64_dim2_type,
-                                   int64_dim2_type, int64_dim2_type, int64_dim2_type, int64_dim1_type, float32_dim2_type)
-lib.yukarin_sa_forward.restype = c_bool
+lib.variance_forward.argtypes = (
+    c_int64, int64_dim1_type, int64_dim1_type, int64_dim1_type, float32_dim1_type, float32_dim1_type)
+lib.variance_forward.restype = c_bool
 
 lib.decode_forward.argtypes = (
-    c_int64, c_int64, float32_dim2_type, float32_dim2_type, int64_dim1_type, float32_dim1_type)
+    c_int64, int64_dim1_type, float32_dim1_type, float32_dim1_type, int64_dim1_type, float32_dim1_type)
 lib.decode_forward.restype = c_bool
 
 lib.last_error_message.restype = c_char_p
@@ -84,8 +81,8 @@ lib.voicevox_error_result_to_message.argtypes = (c_int,)
 lib.voicevox_load_openjtalk_dict.argtypes = (c_char_p,)
 
 # ラッパー関数
-def initialize(use_gpu: bool, cpu_num_threads=0, load_all_models=True):
-    success = lib.initialize(use_gpu, cpu_num_threads, load_all_models)
+def initialize(root_dir_path: str, use_gpu: bool, cpu_num_threads=0, load_all_models=True):
+    success = lib.initialize(root_dir_path, use_gpu, cpu_num_threads, load_all_models)
     if not success:
         raise Exception(lib.last_error_message().decode())
 
@@ -105,37 +102,23 @@ def supported_devices() -> str:
     return lib.supported_devices().decode()
 
 
-def yukarin_s_forward(length: int, phoneme_list: numpy.ndarray, speaker_id: numpy.ndarray) -> numpy.ndarray:
-    output = numpy.zeros((length, ), dtype=numpy.float32)
-    success = lib.yukarin_s_forward(length, phoneme_list, speaker_id, output)
+def variance_forward(length: int, phonemes: array, accents: array, speaker_id: array) -> Tuple[array, array]:
+    pitches = numpy.zeros((length, ), dtype=numpy.float32)
+    durations = numpy.zeros((length, ), dtype=numpy.float32)
+    success = lib.variance_forward(length, phonemes, accents, speaker_id, pitches, durations)
     if not success:
         raise Exception(lib.last_error_message().decode())
-    return output
+    return pitches, durations
 
 
-def yukarin_sa_forward(
-    length: int,
-    vowel_phoneme_list,
-    consonant_phoneme_list,
-    start_accent_list,
-    end_accent_list,
-    start_accent_phrase_list,
-    end_accent_phrase_list,
-    speaker_id
-):
-    output = numpy.empty((len(speaker_id), length,), dtype=numpy.float32)
-    success = lib.yukarin_sa_forward(
-        length, vowel_phoneme_list, consonant_phoneme_list, start_accent_list, end_accent_list, start_accent_phrase_list, end_accent_phrase_list, speaker_id, output
-    )
-    if not success:
-        raise Exception(lib.last_error_message().decode())
-    return output
-
-
-def decode_forward(length: int, phoneme_size: int, f0, phoneme, speaker_id):
-    output = numpy.empty((length*256,), dtype=numpy.float32)
+def decode_forward(length: int, phonemes: array, pitches: array, durations: array, speaker_id: array) -> array:
+    int_durations = numpy.round(durations.astype(numpy.float32) * 93.75).astype(
+        numpy.int64
+    )  # 24000 / 256 = 93.75
+    wave_size = int_durations.sum() * 512
+    output = numpy.zeros((wave_size,), dtype=numpy.float32)
     success = lib.decode_forward(
-        length, phoneme_size, f0, phoneme, speaker_id, output
+        length, phonemes, pitches, durations, speaker_id, output
     )
     if not success:
         raise Exception(lib.last_error_message().decode())
