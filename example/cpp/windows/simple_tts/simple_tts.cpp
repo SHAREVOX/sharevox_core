@@ -28,7 +28,7 @@ int main() {
   std::wcin >> speak_words;
 
   std::wcout << L"coreの初期化中" << std::endl;
-  if (!initialize(false, 0, true)) {
+  if (!initialize("../../../../../../../model", false, 0, true)) {
     std::wcout << L"coreの初期化に失敗しました" << std::endl;
     return 0;
   }
