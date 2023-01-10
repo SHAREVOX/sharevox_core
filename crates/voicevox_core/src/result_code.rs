@@ -41,4 +41,6 @@ pub enum VoicevoxResultCode {
     SHAREVOX_RESULT_INVALID_LIBRARY_UUID_ERROR = 102,
     /// model_config.jsonのlength_regulatorが無効
     SHAREVOX_RESULT_INVALID_LENGTH_REGULATOR_ERROR = 103,
+    /// model_config.jsonのsynthesis_systemが無効
+    SHAREVOX_RESULT_INVALID_SYNTHESIS_SYSTEM_ERROR = 104,
 }

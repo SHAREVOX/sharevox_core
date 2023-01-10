@@ -87,6 +87,12 @@ pub enum Error {
         base_error_message(SHAREVOX_RESULT_INVALID_LENGTH_REGULATOR_ERROR)
     )]
     InvalidLengthRegulator { length_regulator_type: String },
+
+    #[error(
+        "{}: {synthesis_system:?}",
+        base_error_message(SHAREVOX_RESULT_INVALID_SYNTHESIS_SYSTEM_ERROR)
+    )]
+    InvalidSynthesisSystem { synthesis_system: String },
 }
 
 impl PartialEq for Error {
@@ -146,6 +152,14 @@ impl PartialEq for Error {
                     length_regulator_type: length_regulator_type2,
                 },
             ) => length_regulator_type1 == length_regulator_type2,
+            (
+                Self::InvalidSynthesisSystem {
+                    synthesis_system: synthesis_system1,
+                },
+                Self::InvalidSynthesisSystem {
+                    synthesis_system: synthesis_system2,
+                },
+            ) => synthesis_system1 == synthesis_system2,
             _ => false,
         }
     }
