@@ -107,21 +107,21 @@ pub(crate) unsafe fn write_wav_to_ptr(
     write_data_to_ptr(output_wav_ptr, output_length_ptr, data);
 }
 
-pub(crate) unsafe fn write_variance_forward_to_ptr(
-    output_variance_forward_pitch_ptr: *mut *mut f32,
-    output_variance_forward_duration_ptr: *mut *mut f32,
-    output_variance_forward_length_ptr: *mut usize,
+pub(crate) unsafe fn write_predict_pitch_and_duration_to_ptr(
+    output_predict_pitch_ptr: *mut *mut f32,
+    output_predict_duration_ptr: *mut *mut f32,
+    output_predict_length_ptr: *mut usize,
     pitch_data: &[f32],
     duration_data: &[f32],
 ) {
     write_data_to_ptr(
-        output_variance_forward_pitch_ptr,
-        output_variance_forward_length_ptr,
+        output_predict_pitch_ptr,
+        output_predict_length_ptr,
         pitch_data,
     );
     write_data_to_ptr(
-        output_variance_forward_duration_ptr,
-        output_variance_forward_length_ptr,
+        output_predict_duration_ptr,
+        output_predict_length_ptr,
         duration_data,
     );
 }

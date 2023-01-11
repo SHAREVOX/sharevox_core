@@ -108,27 +108,27 @@ impl VoicevoxCore {
         &SUPPORTED_DEVICES_CSTRING
     }
 
-    pub fn variance_forward(
+    pub fn predict_pitch_and_duration(
         &mut self,
         phoneme_vector: &[i64],
         accent_vector: &[i64],
         speaker_id: u32,
     ) -> Result<(Vec<f32>, Vec<f32>)> {
-        self.synthesis_engine.inference_core_mut().variance_forward(
+        self.synthesis_engine.inference_core_mut().predict_pitch_and_duration(
             phoneme_vector,
             accent_vector,
             speaker_id,
         )
     }
 
-    pub fn decode_forward(
+    pub fn decode(
         &mut self,
         phoneme_vector: &[i64],
         pitch_vector: &[f32],
         duration_vector: &[f32],
         speaker_id: u32,
     ) -> Result<Vec<f32>> {
-        self.synthesis_engine.inference_core_mut().decode_forward(
+        self.synthesis_engine.inference_core_mut().decode(
             phoneme_vector,
             pitch_vector,
             duration_vector,
@@ -323,7 +323,7 @@ impl InferenceCore {
         }
     }
 
-    pub fn variance_forward(
+    pub fn predict_pitch_and_duration(
         &mut self,
         phoneme_vector: &[i64],
         accent_vector: &[i64],
@@ -375,7 +375,7 @@ impl InferenceCore {
         status.variance_session_run(&library_uuid, input_tensors)
     }
 
-    pub fn decode_forward(
+    pub fn decode(
         &mut self,
         phoneme_vector: &[i64],
         pitch_vector: &[f32],
@@ -756,7 +756,7 @@ mod tests {
     // }
 
     #[rstest]
-    fn variance_forward_works() {
+    fn predict_pitch_and_duration_works() {
         let internal = VoicevoxCore::new_with_mutex();
         internal
             .lock()
@@ -781,7 +781,7 @@ mod tests {
         let result = internal
             .lock()
             .unwrap()
-            .variance_forward(&phoneme_vector, &accent_vector, 0);
+            .predict_pitch_and_duration(&phoneme_vector, &accent_vector, 0);
 
         assert!(result.is_ok(), "{:?}", result);
 
@@ -827,7 +827,7 @@ mod tests {
     // }
 
     #[rstest]
-    fn decode_forward_works() {
+    fn decode_works() {
         let internal = VoicevoxCore::new_with_mutex();
         internal
             .lock()
@@ -850,7 +850,7 @@ mod tests {
         let pitch_vector = vec![5.5; phoneme_vector.len()];
         let duration_vector = vec![0.1; phoneme_vector.len()];
 
-        let result = internal.lock().unwrap().decode_forward(
+        let result = internal.lock().unwrap().decode(
             &phoneme_vector,
             &pitch_vector,
             &duration_vector,

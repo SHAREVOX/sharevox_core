@@ -69,7 +69,7 @@ class VoicevoxCore:
         モデルが読み込まれているのであればtrue、そうでないならfalse
         """
         ...
-    def variance_forward(
+    def predict_pitch_and_duration(
         self,
         phoneme_vector: NDArray[np.int64],
         accent_vector: NDArray[np.int64],
@@ -89,7 +89,7 @@ class VoicevoxCore:
         音素ごとの長さ
         """
         ...
-    def decode_forward(
+    def decode(
         self,
         phoneme_vector: NDArray[np.int64],
         pitch_vector: NDArray[np.float32],

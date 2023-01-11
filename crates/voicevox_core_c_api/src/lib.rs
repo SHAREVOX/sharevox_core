@@ -164,25 +164,25 @@ pub extern "C" fn voicevox_get_supported_devices_json() -> *const c_char {
 /// @param output_predict_duration_data_length uintptr_t 分のメモリ領域が割り当てられていること
 /// @param output_predict_duration_data 成功後にメモリ領域が割り当てられるので ::voicevox_predict_duration_data_free で解放する必要がある
 #[no_mangle]
-pub unsafe extern "C" fn voicevox_variance_forward(
+pub unsafe extern "C" fn voicevox_predict_pitch_and_duration(
     length: usize,
     phoneme_vector: *mut i64,
     accent_vector: *mut i64,
     speaker_id: u32,
-    output_variance_forward_data_length: *mut usize,
-    output_variance_forward_pitch_data: *mut *mut f32,
-    output_variance_forward_duration_data: *mut *mut f32,
+    output_predict_data_length: *mut usize,
+    output_predict_pitch_data: *mut *mut f32,
+    output_predict_duration_data: *mut *mut f32,
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
-        let output_vec_pair = lock_internal().variance_forward(
+        let output_vec_pair = lock_internal().predict_pitch_and_duration(
             std::slice::from_raw_parts_mut(phoneme_vector, length),
             std::slice::from_raw_parts_mut(accent_vector, length),
             speaker_id,
         )?;
-        write_variance_forward_to_ptr(
-            output_variance_forward_pitch_data,
-            output_variance_forward_duration_data,
-            output_variance_forward_data_length,
+        write_predict_pitch_and_duration_to_ptr(
+            output_predict_pitch_data,
+            output_predict_duration_data,
+            output_predict_data_length,
             &output_vec_pair.0,
             &output_vec_pair.1,
         );
@@ -196,12 +196,12 @@ pub unsafe extern "C" fn voicevox_variance_forward(
 /// # Safety
 /// @param predict_duration_data 実行後に割り当てられたメモリ領域が解放される
 #[no_mangle]
-pub unsafe extern "C" fn voicevox_variance_forward_data_free(
-    variance_forward_pitch_data: *mut f32,
-    variance_forward_duration_data: *mut f32,
+pub unsafe extern "C" fn voicevox_predict_pitch_and_duration_data_free(
+    predict_pitch_data: *mut f32,
+    predict_duration_data: *mut f32,
 ) {
-    libc::free(variance_forward_pitch_data as *mut c_void);
-    libc::free(variance_forward_duration_data as *mut c_void);
+    libc::free(predict_pitch_data as *mut c_void);
+    libc::free(predict_duration_data as *mut c_void);
 }
 
 /// decodeを実行する
@@ -220,7 +220,7 @@ pub unsafe extern "C" fn voicevox_variance_forward_data_free(
 /// @param output_decode_data_length uintptr_t 分のメモリ領域が割り当てられていること
 /// @param output_decode_data 成功後にメモリ領域が割り当てられるので ::voicevox_decode_data_free で解放する必要がある
 #[no_mangle]
-pub unsafe extern "C" fn voicevox_decode_forward(
+pub unsafe extern "C" fn voicevox_decode(
     length: usize,
     phonemes: *mut i64,
     pitches: *mut f32,
@@ -230,7 +230,7 @@ pub unsafe extern "C" fn voicevox_decode_forward(
     output_decode_data: *mut *mut f32,
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
-        let output_vec = lock_internal().decode_forward(
+        let output_vec = lock_internal().decode(
             std::slice::from_raw_parts_mut(phonemes, length),
             std::slice::from_raw_parts_mut(pitches, length),
             std::slice::from_raw_parts_mut(durations, length),
