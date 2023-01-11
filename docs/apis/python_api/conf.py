@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'voicevox_core_python_api'
+project = 'sharevox_core_python_api'
 # copyright = '2022, _'
 # author = '_'
 # release = '_'

@@ -1,6 +1,6 @@
 # Windows C++ のサンプルプロジェクト
 
-ここには、voicevox_coreライブラリをC++から使用するサンプルプロジェクトが含まれています。
+ここには、sharevox_coreライブラリをC++から使用するサンプルプロジェクトが含まれています。
 プロジェクトを開くには、Microsoft Visual Studio Community 2022(無料)が必要です。また、「C++によるデスクトップ開発」のワークロードが必要です。
 Visual Studio Installerを使用しインストールしてください。  
 
@@ -14,7 +14,7 @@ Visual Studio Installerを使用しインストールしてください。
 
 出力フォルダを作成するために、一度ビルドします。「windows_example.sln」をVisual Studioで開き、メニューの「ビルド」→「ソリューションのビルド」を押します。
 この段階では、ビルドは失敗します。「bin」フォルダと「lib」フォルダが生成されていればOKです。  
-Releasesから「voicevox_core-windows-x64-cpu-{バージョン名}.zip」をダウンロードし、展開します。  
+Releasesから「sharevox_core-windows-x64-cpu-{バージョン名}.zip」をダウンロードし、展開します。  
 展開してできたファイルをそれぞれ下記のフォルダへ配置します。
 
 - simple_tts に配置

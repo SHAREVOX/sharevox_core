@@ -5,8 +5,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import Tuple
 
-import voicevox_core
-from voicevox_core import AccelerationMode, AudioQuery, VoicevoxCore
+import sharevox_core
+from sharevox_core import AccelerationMode, AudioQuery, SharevoxCore
 
 SPEAKER_ID = 0
 
@@ -19,11 +19,11 @@ def main() -> None:
 
     (acceleration_mode, open_jtalk_dict_dir, text, out) = parse_args()
 
-    # logger.debug("%s", f"{voicevox_core.METAS=}")
-    logger.debug("%s", f"{voicevox_core.SUPPORTED_DEVICES=}")
+    # logger.debug("%s", f"{sharevox_core.METAS=}")
+    logger.debug("%s", f"{sharevox_core.SUPPORTED_DEVICES=}")
 
     logger.info("%s", f"Initializing ({acceleration_mode=}, {open_jtalk_dict_dir=})")
-    core = VoicevoxCore(
+    core = SharevoxCore(
         "../../model", acceleration_mode=acceleration_mode, open_jtalk_dict_dir=open_jtalk_dict_dir
     )
 

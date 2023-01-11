@@ -16,7 +16,7 @@ jobs:
           - name: 通常ダウンロード
             os: windows-latest
             download_command: ./scripts/downloads/Download.ps1
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               core.dll
               open_jtalk_dic_utf_8-1.11
@@ -33,7 +33,7 @@ jobs:
           - name: CpuArch指定
             os: windows-latest
             download_command: ./scripts/downloads/Download.ps1 -CpuArch x86
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               core.dll
               open_jtalk_dic_utf_8-1.11
@@ -67,7 +67,7 @@ jobs:
           - name: Min option確認
             os: windows-latest
             download_command: ./scripts/downloads/Download.ps1 -Min $True
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               core.dll
               README.txt
@@ -84,7 +84,7 @@ jobs:
           - name: DirectML option確認
             os: windows-latest
             download_command: ./scripts/downloads/Download.ps1 -Accelerator directml
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               core.dll
               open_jtalk_dic_utf_8-1.11
@@ -102,7 +102,7 @@ jobs:
           - name: DirectMLかつMin option確認
             os: windows-latest
             download_command: ./scripts/downloads/Download.ps1 -Accelerator directml -Min $true
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               core.dll
               README.txt
@@ -119,7 +119,7 @@ jobs:
           - name: cuda option確認
             os: windows-latest
             download_command: ./scripts/downloads/Download.ps1 -Accelerator cuda
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               core.dll
               open_jtalk_dic_utf_8-1.11
@@ -140,7 +140,7 @@ jobs:
           - name: cudaかつmin option確認
             os: windows-latest
             download_command: ./scripts/downloads/Download.ps1 -Accelerator cuda -Min $true
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               core.dll
               README.txt
@@ -161,7 +161,7 @@ jobs:
           - name: 通常ダウンロード
             os: ubuntu-latest
             download_command: ./scripts/downloads/download.sh
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               libcore.so
               open_jtalk_dic_utf_8-1.11
@@ -178,7 +178,7 @@ jobs:
           - name: CPUArch指定
             os: ubuntu-latest
             download_command: ./scripts/downloads/download.sh --cpu-arch x64
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               libcore.so
               open_jtalk_dic_utf_8-1.11
@@ -212,7 +212,7 @@ jobs:
           - name: min option確認
             os: ubuntu-latest
             download_command: ./scripts/downloads/download.sh --min
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               libcore.so
               README.txt
@@ -229,7 +229,7 @@ jobs:
           - name: cuda option確認
             os: ubuntu-latest
             download_command: ./scripts/downloads/download.sh --accelerator cuda
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               libcore.so
               open_jtalk_dic_utf_8-1.11
@@ -249,7 +249,7 @@ jobs:
           - name: cudaかつmin option確認
             os: ubuntu-latest
             download_command: ./scripts/downloads/download.sh --accelerator cuda --min
-            download_dir: voicevox_core
+            download_dir: sharevox_core
             check_items: |
               libcore.so
               README.txt
@@ -280,7 +280,7 @@ jobs:
         if: ${{ env.EXPECTED_VOICEVOX_CORE_VERSION == 'latest' }}
         shell: bash
         run: |
-          echo "EXPECTED_VOICEVOX_CORE_VERSION=$(curl -sSfI "https://github.com/VOICEVOX/voicevox_core/releases/latest"| grep "location:" | sed -e "s%location: https://github.com/VOICEVOX/voicevox_core/releases/tag/%%" | sed 's/\r//g')" >> "$GITHUB_ENV"
+          echo "EXPECTED_VOICEVOX_CORE_VERSION=$(curl -sSfI "https://github.com/SHAREVOX/sharevox_core/releases/latest"| grep "location:" | sed -e "s%location: https://github.com/SHAREVOX/sharevox_core/releases/tag/%%" | sed 's/\r//g')" >> "$GITHUB_ENV"
       - name: Check downloaded version
         shell: bash
         run: |

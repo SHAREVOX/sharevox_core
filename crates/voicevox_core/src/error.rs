@@ -1,65 +1,65 @@
 use self::engine::{FullContextLabelError, KanaParseError};
-use self::result_code::VoicevoxResultCode::{self, *};
+use self::result_code::SharevoxResultCode::{self, *};
 use super::*;
 //use engine::
 use thiserror::Error;
 
 /*
- * 新しいエラーを定義したら、必ずresult_code.rsにあるVoicevoxResultCodeに対応するコードを定義し、
+ * 新しいエラーを定義したら、必ずresult_code.rsにあるSharevoxResultCodeに対応するコードを定義し、
  * internal.rsにある変換関数に変換処理を加えること
  */
 
 #[derive(Error, Debug)]
 pub enum Error {
     /*
-     * エラーメッセージのベースとなる文字列は必ずbase_error_message関数を使用してVoicevoxResultCodeのエラー出力の内容と対応するようにすること
+     * エラーメッセージのベースとなる文字列は必ずbase_error_message関数を使用してSharevoxResultCodeのエラー出力の内容と対応するようにすること
      */
     #[error(
         "{}",
-        base_error_message(VOICEVOX_RESULT_NOT_LOADED_OPENJTALK_DICT_ERROR)
+        base_error_message(SHAREVOX_RESULT_NOT_LOADED_OPENJTALK_DICT_ERROR)
     )]
     NotLoadedOpenjtalkDict,
 
-    #[error("{}", base_error_message(VOICEVOX_RESULT_GPU_SUPPORT_ERROR))]
+    #[error("{}", base_error_message(SHAREVOX_RESULT_GPU_SUPPORT_ERROR))]
     GpuSupport,
 
-    #[error("{},{0}", base_error_message(VOICEVOX_RESULT_LOAD_MODEL_ERROR))]
+    #[error("{},{0}", base_error_message(SHAREVOX_RESULT_LOAD_MODEL_ERROR))]
     LoadModel(#[source] anyhow::Error),
 
-    #[error("{},{0}", base_error_message(VOICEVOX_RESULT_LOAD_METAS_ERROR))]
+    #[error("{},{0}", base_error_message(SHAREVOX_RESULT_LOAD_METAS_ERROR))]
     LoadMetas(#[source] anyhow::Error),
 
     #[error(
         "{},{0}",
-        base_error_message(VOICEVOX_RESULT_GET_SUPPORTED_DEVICES_ERROR)
+        base_error_message(SHAREVOX_RESULT_GET_SUPPORTED_DEVICES_ERROR)
     )]
     GetSupportedDevices(#[source] anyhow::Error),
 
-    #[error("{}", base_error_message(VOICEVOX_RESULT_UNINITIALIZED_STATUS_ERROR))]
+    #[error("{}", base_error_message(SHAREVOX_RESULT_UNINITIALIZED_STATUS_ERROR))]
     UninitializedStatus,
 
     #[error(
         "{}: {speaker_id}",
-        base_error_message(VOICEVOX_RESULT_INVALID_SPEAKER_ID_ERROR)
+        base_error_message(SHAREVOX_RESULT_INVALID_SPEAKER_ID_ERROR)
     )]
     InvalidSpeakerId { speaker_id: u32 },
 
     #[error(
         "{}: {model_index}",
-        base_error_message(VOICEVOX_RESULT_INVALID_MODEL_INDEX_ERROR)
+        base_error_message(SHAREVOX_RESULT_INVALID_MODEL_INDEX_ERROR)
     )]
     InvalidModelIndex { model_index: usize },
 
-    #[error("{}", base_error_message(VOICEVOX_RESULT_INFERENCE_ERROR))]
+    #[error("{}", base_error_message(SHAREVOX_RESULT_INFERENCE_ERROR))]
     InferenceFailed,
 
     #[error(
         "{},{0}",
-        base_error_message(VOICEVOX_RESULT_EXTRACT_FULL_CONTEXT_LABEL_ERROR)
+        base_error_message(SHAREVOX_RESULT_EXTRACT_FULL_CONTEXT_LABEL_ERROR)
     )]
     ExtractFullContextLabel(#[from] FullContextLabelError),
 
-    #[error("{},{0}", base_error_message(VOICEVOX_RESULT_PARSE_KANA_ERROR))]
+    #[error("{},{0}", base_error_message(SHAREVOX_RESULT_PARSE_KANA_ERROR))]
     ParseKana(#[from] KanaParseError),
 
     #[error("{},{0}", base_error_message(SHAREVOX_RESULT_LOAD_LIBRARIES_ERROR))]
@@ -151,7 +151,7 @@ impl PartialEq for Error {
     }
 }
 
-fn base_error_message(result_code: VoicevoxResultCode) -> &'static str {
+fn base_error_message(result_code: SharevoxResultCode) -> &'static str {
     let c_message: &'static str = crate::error_result_to_message(result_code);
     &c_message[..(c_message.len() - 1)]
 }

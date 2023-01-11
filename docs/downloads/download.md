@@ -1,4 +1,4 @@
-# VOICEVOX CORE Downloader
+# SHAREVOX CORE Downloader
 
 <a id="default"></a>
 <a id="cpu"></a>
@@ -10,14 +10,14 @@
 PowerShell で下記コマンドを実行してください
 
 ```PowerShell
-Invoke-WebRequest https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download.ps1 -OutFile ./download.ps1
+Invoke-WebRequest https://github.com/SHAREVOX/sharevox_core/releases/latest/download/download.ps1 -OutFile ./download.ps1
 ./download.ps1
 ```
 
 ### Linux/macOS の場合
 
 ```bash
-curl -sSfL https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download.sh | bash -s
+curl -sSfL https://github.com/SHAREVOX/sharevox_core/releases/latest/download/download.sh | bash -s
 ```
 
 <a id="directml"></a>
@@ -25,7 +25,7 @@ curl -sSfL https://github.com/VOICEVOX/voicevox_core/releases/latest/download/do
 ## DirectML 版をダウンロードする場合
 
 ```PowerShell
-Invoke-WebRequest https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download.ps1 -OutFile ./download.ps1
+Invoke-WebRequest https://github.com/SHAREVOX/sharevox_core/releases/latest/download/download.ps1 -OutFile ./download.ps1
 ./download.ps1 -Accelerator directml
 ```
 
@@ -36,14 +36,14 @@ Invoke-WebRequest https://github.com/VOICEVOX/voicevox_core/releases/latest/down
 ### Windows の場合
 
 ```PowerShell
-Invoke-WebRequest https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download.ps1 -OutFile ./download.ps1
+Invoke-WebRequest https://github.com/SHAREVOX/sharevox_core/releases/latest/download/download.ps1 -OutFile ./download.ps1
 ./download.ps1 -Accelerator cuda
 ```
 
 ### Linux の場合
 
 ```bash
-curl -sSfL https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download.sh | bash -s -- --accelerator cuda
+curl -sSfL https://github.com/SHAREVOX/sharevox_core/releases/latest/download/download.sh | bash -s -- --accelerator cuda
 ```
 
 <a id="help"></a>
@@ -56,12 +56,12 @@ curl -sSfL https://github.com/VOICEVOX/voicevox_core/releases/latest/download/do
 ### Windows の場合
 
 ```PowerShell
-Invoke-WebRequest https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download.ps1 -OutFile ./download.ps1
+Invoke-WebRequest https://github.com/SHAREVOX/sharevox_core/releases/latest/download/download.ps1 -OutFile ./download.ps1
 Get-Help ./download.ps1 -full
 ```
 
 ### Linux/macOS の場合
 
 ```bash
-curl -sSfL https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download.sh | bash -s -- --help
+curl -sSfL https://github.com/SHAREVOX/sharevox_core/releases/latest/download/download.sh | bash -s -- --help
 ```

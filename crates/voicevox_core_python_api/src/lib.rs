@@ -27,7 +27,7 @@ fn rust(py: Python<'_>, module: &PyModule) -> PyResult<()> {
     pyo3_log::init();
 
     // module.add("METAS", {
-    //     let class = py.import("voicevox_core")?.getattr("Meta")?.cast_as()?;
+    //     let class = py.import("sharevox_core")?.getattr("Meta")?.cast_as()?;
     //     let meta_from_json = |x: &serde_json::Value| to_pydantic_dataclass(x, class);
     //     serde_json::from_str::<Vec<_>>(voicevox_core::METAS)
     //         .into_py_result()?
@@ -38,7 +38,7 @@ fn rust(py: Python<'_>, module: &PyModule) -> PyResult<()> {
 
     module.add("SUPPORTED_DEVICES", {
         let class = py
-            .import("voicevox_core")?
+            .import("sharevox_core")?
             .getattr("SupportedDevices")?
             .cast_as()?;
         let supported_devices_from_json = |x: &serde_json::Value| to_pydantic_dataclass(x, class);
@@ -47,23 +47,23 @@ fn rust(py: Python<'_>, module: &PyModule) -> PyResult<()> {
 
     module.add("__version__", voicevox_core::VoicevoxCore::get_version())?;
 
-    module.add_class::<VoicevoxCore>()
+    module.add_class::<SharevoxCore>()
 }
 
 create_exception!(
     voicevox_core,
-    VoicevoxError,
+    SharevoxError,
     PyException,
-    "voicevox_core Error."
+    "sharevox_core Error."
 );
 
 #[pyclass]
-struct VoicevoxCore {
+struct SharevoxCore {
     inner: voicevox_core::VoicevoxCore,
 }
 
 #[pymethods]
-impl VoicevoxCore {
+impl SharevoxCore {
     #[new]
     #[args(
         acceleration_mode = "InitializeOptions::default().acceleration_mode",
@@ -92,7 +92,7 @@ impl VoicevoxCore {
     }
 
     fn __repr__(&self) -> &'static str {
-        "VoicevoxCore { .. }"
+        "SharevoxCore { .. }"
     }
 
     #[getter]
@@ -102,7 +102,7 @@ impl VoicevoxCore {
 
     #[getter]
     fn metas<'py>(&mut self, py: Python<'py>) -> PyResult<&'py PyList> {
-        let class = py.import("voicevox_core")?.getattr("Meta")?.cast_as()?;
+        let class = py.import("sharevox_core")?.getattr("Meta")?.cast_as()?;
         let metas = self.inner.get_metas_json().to_str()?;
         let meta_from_json = |x: &serde_json::Value| to_pydantic_dataclass(x, class);
         let metas_vector = serde_json::from_str::<Vec<_>>(metas)
@@ -176,7 +176,7 @@ impl VoicevoxCore {
             .into_py_result()?;
         to_pydantic_dataclass(
             audio_query,
-            py.import("voicevox_core")?.getattr("AudioQuery")?,
+            py.import("sharevox_core")?.getattr("AudioQuery")?,
         )
     }
 
@@ -231,7 +231,7 @@ impl VoicevoxCore {
 fn from_acceleration_mode(ob: &PyAny) -> PyResult<AccelerationMode> {
     let py = ob.py();
 
-    let class = py.import("voicevox_core")?.getattr("AccelerationMode")?;
+    let class = py.import("sharevox_core")?.getattr("AccelerationMode")?;
     let mode = class.get_item(ob)?;
 
     if mode.eq(class.getattr("AUTO")?)? {
@@ -254,7 +254,7 @@ fn from_optional_utf8_path(ob: &PyAny) -> PyResult<Option<String>> {
         .into_os_string()
         .into_string()
         .map(Some)
-        .map_err(|s| VoicevoxError::new_err(format!("{s:?} cannot be encoded to UTF-8")))
+        .map_err(|s| SharevoxError::new_err(format!("{s:?} cannot be encoded to UTF-8")))
 }
 
 fn from_dataclass<T: DeserializeOwned>(ob: &PyAny) -> PyResult<T> {
@@ -276,9 +276,9 @@ fn to_pydantic_dataclass(x: impl Serialize, class: &PyAny) -> PyResult<&PyAny> {
     class.call((), Some(x))
 }
 
-impl Drop for VoicevoxCore {
+impl Drop for SharevoxCore {
     fn drop(&mut self) {
-        debug!("Destructing a VoicevoxCore");
+        debug!("Destructing a SharevoxCore");
         self.inner.finalize();
     }
 }
@@ -286,6 +286,6 @@ impl Drop for VoicevoxCore {
 #[ext]
 impl<T, E: Display> Result<T, E> {
     fn into_py_result(self) -> PyResult<T> {
-        self.map_err(|e| VoicevoxError::new_err(e.to_string()))
+        self.map_err(|e| SharevoxError::new_err(e.to_string()))
     }
 }

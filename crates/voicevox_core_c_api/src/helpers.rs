@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use super::*;
 
-pub(crate) fn into_result_code_with_error(result: CApiResult<()>) -> VoicevoxResultCode {
+pub(crate) fn into_result_code_with_error(result: CApiResult<()>) -> SharevoxResultCode {
     if let Err(err) = &result {
         display_error(err);
     }
@@ -15,33 +15,33 @@ pub(crate) fn into_result_code_with_error(result: CApiResult<()>) -> VoicevoxRes
         eprintln!("Error(Debug): {err:#?}");
     }
 
-    fn into_result_code(result: CApiResult<()>) -> VoicevoxResultCode {
-        use voicevox_core::{result_code::VoicevoxResultCode::*, Error::*};
+    fn into_result_code(result: CApiResult<()>) -> SharevoxResultCode {
+        use voicevox_core::{result_code::SharevoxResultCode::*, Error::*};
         use CApiError::*;
 
         match result {
-            Ok(()) => VOICEVOX_RESULT_OK,
-            Err(RustApi(NotLoadedOpenjtalkDict)) => VOICEVOX_RESULT_NOT_LOADED_OPENJTALK_DICT_ERROR,
-            Err(RustApi(GpuSupport)) => VOICEVOX_RESULT_GPU_SUPPORT_ERROR,
-            Err(RustApi(LoadModel(_))) => VOICEVOX_RESULT_LOAD_MODEL_ERROR,
-            Err(RustApi(LoadMetas(_))) => VOICEVOX_RESULT_LOAD_METAS_ERROR,
-            Err(RustApi(GetSupportedDevices(_))) => VOICEVOX_RESULT_GET_SUPPORTED_DEVICES_ERROR,
-            Err(RustApi(UninitializedStatus)) => VOICEVOX_RESULT_UNINITIALIZED_STATUS_ERROR,
-            Err(RustApi(InvalidSpeakerId { .. })) => VOICEVOX_RESULT_INVALID_SPEAKER_ID_ERROR,
-            Err(RustApi(InvalidModelIndex { .. })) => VOICEVOX_RESULT_INVALID_MODEL_INDEX_ERROR,
-            Err(RustApi(InferenceFailed)) => VOICEVOX_RESULT_INFERENCE_ERROR,
+            Ok(()) => SHAREVOX_RESULT_OK,
+            Err(RustApi(NotLoadedOpenjtalkDict)) => SHAREVOX_RESULT_NOT_LOADED_OPENJTALK_DICT_ERROR,
+            Err(RustApi(GpuSupport)) => SHAREVOX_RESULT_GPU_SUPPORT_ERROR,
+            Err(RustApi(LoadModel(_))) => SHAREVOX_RESULT_LOAD_MODEL_ERROR,
+            Err(RustApi(LoadMetas(_))) => SHAREVOX_RESULT_LOAD_METAS_ERROR,
+            Err(RustApi(GetSupportedDevices(_))) => SHAREVOX_RESULT_GET_SUPPORTED_DEVICES_ERROR,
+            Err(RustApi(UninitializedStatus)) => SHAREVOX_RESULT_UNINITIALIZED_STATUS_ERROR,
+            Err(RustApi(InvalidSpeakerId { .. })) => SHAREVOX_RESULT_INVALID_SPEAKER_ID_ERROR,
+            Err(RustApi(InvalidModelIndex { .. })) => SHAREVOX_RESULT_INVALID_MODEL_INDEX_ERROR,
+            Err(RustApi(InferenceFailed)) => SHAREVOX_RESULT_INFERENCE_ERROR,
             Err(RustApi(ExtractFullContextLabel(_))) => {
-                VOICEVOX_RESULT_EXTRACT_FULL_CONTEXT_LABEL_ERROR
+                SHAREVOX_RESULT_EXTRACT_FULL_CONTEXT_LABEL_ERROR
             }
-            Err(RustApi(ParseKana(_))) => VOICEVOX_RESULT_PARSE_KANA_ERROR,
+            Err(RustApi(ParseKana(_))) => SHAREVOX_RESULT_PARSE_KANA_ERROR,
             Err(RustApi(LoadLibraries(_))) => SHAREVOX_RESULT_LOAD_LIBRARIES_ERROR,
             Err(RustApi(LoadModelConfig { .. })) => SHAREVOX_RESULT_LOAD_MODEL_CONFIG_ERROR,
             Err(RustApi(InvalidLibraryUuid { .. })) => SHAREVOX_RESULT_INVALID_LIBRARY_UUID_ERROR,
             Err(RustApi(InvalidLengthRegulator { .. })) => {
                 SHAREVOX_RESULT_INVALID_LENGTH_REGULATOR_ERROR
             }
-            Err(InvalidUtf8Input) => VOICEVOX_RESULT_INVALID_UTF8_INPUT_ERROR,
-            Err(InvalidAudioQuery(_)) => VOICEVOX_RESULT_INVALID_AUDIO_QUERY_ERROR,
+            Err(InvalidUtf8Input) => SHAREVOX_RESULT_INVALID_UTF8_INPUT_ERROR,
+            Err(InvalidAudioQuery(_)) => SHAREVOX_RESULT_INVALID_AUDIO_QUERY_ERROR,
         }
     }
 }
@@ -69,7 +69,7 @@ pub(crate) fn create_audio_query(
         u32,
         voicevox_core::AudioQueryOptions,
     ) -> Result<AudioQueryModel>,
-    options: VoicevoxAudioQueryOptions,
+    options: SharevoxAudioQueryOptions,
 ) -> CApiResult<CString> {
     let japanese_or_kana = ensure_utf8(japanese_or_kana)?;
 
@@ -162,48 +162,48 @@ pub(crate) fn ensure_utf8(s: &CStr) -> CApiResult<&str> {
     s.to_str().map_err(|_| CApiError::InvalidUtf8Input)
 }
 
-impl From<voicevox_core::AudioQueryOptions> for VoicevoxAudioQueryOptions {
+impl From<voicevox_core::AudioQueryOptions> for SharevoxAudioQueryOptions {
     fn from(options: voicevox_core::AudioQueryOptions) -> Self {
         Self { kana: options.kana }
     }
 }
-impl From<VoicevoxAudioQueryOptions> for voicevox_core::AudioQueryOptions {
-    fn from(options: VoicevoxAudioQueryOptions) -> Self {
+impl From<SharevoxAudioQueryOptions> for voicevox_core::AudioQueryOptions {
+    fn from(options: SharevoxAudioQueryOptions) -> Self {
         Self { kana: options.kana }
     }
 }
 
-impl From<VoicevoxSynthesisOptions> for voicevox_core::SynthesisOptions {
-    fn from(options: VoicevoxSynthesisOptions) -> Self {
+impl From<SharevoxSynthesisOptions> for voicevox_core::SynthesisOptions {
+    fn from(options: SharevoxSynthesisOptions) -> Self {
         Self {
             enable_interrogative_upspeak: options.enable_interrogative_upspeak,
         }
     }
 }
 
-impl From<voicevox_core::AccelerationMode> for VoicevoxAccelerationMode {
+impl From<voicevox_core::AccelerationMode> for SharevoxAccelerationMode {
     fn from(mode: voicevox_core::AccelerationMode) -> Self {
         use voicevox_core::AccelerationMode::*;
         match mode {
-            Auto => Self::VOICEVOX_ACCELERATION_MODE_AUTO,
-            Cpu => Self::VOICEVOX_ACCELERATION_MODE_CPU,
-            Gpu => Self::VOICEVOX_ACCELERATION_MODE_GPU,
+            Auto => Self::SHAREVOX_ACCELERATION_MODE_AUTO,
+            Cpu => Self::SHAREVOX_ACCELERATION_MODE_CPU,
+            Gpu => Self::SHAREVOX_ACCELERATION_MODE_GPU,
         }
     }
 }
 
-impl From<VoicevoxAccelerationMode> for voicevox_core::AccelerationMode {
-    fn from(mode: VoicevoxAccelerationMode) -> Self {
-        use VoicevoxAccelerationMode::*;
+impl From<SharevoxAccelerationMode> for voicevox_core::AccelerationMode {
+    fn from(mode: SharevoxAccelerationMode) -> Self {
+        use SharevoxAccelerationMode::*;
         match mode {
-            VOICEVOX_ACCELERATION_MODE_AUTO => Self::Auto,
-            VOICEVOX_ACCELERATION_MODE_CPU => Self::Cpu,
-            VOICEVOX_ACCELERATION_MODE_GPU => Self::Gpu,
+            SHAREVOX_ACCELERATION_MODE_AUTO => Self::Auto,
+            SHAREVOX_ACCELERATION_MODE_CPU => Self::Cpu,
+            SHAREVOX_ACCELERATION_MODE_GPU => Self::Gpu,
         }
     }
 }
 
-impl Default for VoicevoxInitializeOptions {
+impl Default for SharevoxInitializeOptions {
     fn default() -> Self {
         let options = voicevox_core::InitializeOptions::default();
         Self {
@@ -215,7 +215,7 @@ impl Default for VoicevoxInitializeOptions {
     }
 }
 
-impl VoicevoxInitializeOptions {
+impl SharevoxInitializeOptions {
     pub(crate) unsafe fn try_into_options(self) -> CApiResult<voicevox_core::InitializeOptions> {
         let open_jtalk_dict_dir = (!self.open_jtalk_dict_dir.is_null())
             .then(|| ensure_utf8(CStr::from_ptr(self.open_jtalk_dict_dir)).map(Into::into))
@@ -229,7 +229,7 @@ impl VoicevoxInitializeOptions {
     }
 }
 
-impl From<voicevox_core::TtsOptions> for VoicevoxTtsOptions {
+impl From<voicevox_core::TtsOptions> for SharevoxTtsOptions {
     fn from(options: voicevox_core::TtsOptions) -> Self {
         Self {
             kana: options.kana,
@@ -238,8 +238,8 @@ impl From<voicevox_core::TtsOptions> for VoicevoxTtsOptions {
     }
 }
 
-impl From<VoicevoxTtsOptions> for voicevox_core::TtsOptions {
-    fn from(options: VoicevoxTtsOptions) -> Self {
+impl From<SharevoxTtsOptions> for voicevox_core::TtsOptions {
+    fn from(options: SharevoxTtsOptions) -> Self {
         Self {
             kana: options.kana,
             enable_interrogative_upspeak: options.enable_interrogative_upspeak,
@@ -247,7 +247,7 @@ impl From<VoicevoxTtsOptions> for voicevox_core::TtsOptions {
     }
 }
 
-impl Default for VoicevoxSynthesisOptions {
+impl Default for SharevoxSynthesisOptions {
     fn default() -> Self {
         let options = voicevox_core::TtsOptions::default();
         Self {

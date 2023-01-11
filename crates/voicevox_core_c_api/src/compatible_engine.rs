@@ -1,7 +1,7 @@
 use super::*;
 use libc::c_int;
 
-pub use voicevox_core::result_code::VoicevoxResultCode;
+pub use voicevox_core::result_code::SharevoxResultCode;
 
 static ERROR_MESSAGE: Lazy<Mutex<String>> = Lazy::new(|| Mutex::new(String::new()));
 
@@ -66,7 +66,7 @@ pub extern "C" fn finalize() {
 
 #[no_mangle]
 pub extern "C" fn metas() -> *const c_char {
-    voicevox_get_metas_json()
+    sharevox_get_metas_json()
 }
 
 #[no_mangle]
@@ -76,21 +76,21 @@ pub extern "C" fn last_error_message() -> *const c_char {
 
 #[no_mangle]
 pub extern "C" fn supported_devices() -> *const c_char {
-    voicevox_get_supported_devices_json()
+    sharevox_get_supported_devices_json()
 }
 
 #[no_mangle]
 pub extern "C" fn variance_forward(
     length: i64,
-    phoneme_list: *mut i64,
-    accent_list: *mut i64,
+    phonemes: *mut i64,
+    accents: *mut i64,
     speaker_id: *mut i64,
     pitch_output: *mut f32,
     duration_output: *mut f32,
 ) -> bool {
     let result = lock_internal().predict_pitch_and_duration(
-        unsafe { std::slice::from_raw_parts_mut(phoneme_list, length as usize) },
-        unsafe { std::slice::from_raw_parts_mut(accent_list, length as usize) },
+        unsafe { std::slice::from_raw_parts_mut(phonemes, length as usize) },
+        unsafe { std::slice::from_raw_parts_mut(accents, length as usize) },
         unsafe { *speaker_id as u32 },
     );
     match result {

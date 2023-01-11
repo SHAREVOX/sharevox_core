@@ -3,7 +3,7 @@ language = "C"
 # Options for wrapping the contents of the header:
 
 header = "/// @file"
-include_guard = "VOICEVOX_CORE_INCLUDE_GUARD"
+include_guard = "SHAREVOX_CORE_INCLUDE_GUARD"
 no_includes = true
 cpp_compat = true
 after_includes = """

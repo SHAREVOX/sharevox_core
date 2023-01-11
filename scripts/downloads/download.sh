@@ -4,8 +4,8 @@ help(){
   cat <<EOM
   Usage: $(basename "$0") [OPTION]...
     -h|--help                                 ヘルプの表示
-    -o|--output \$directory                    出力先の指定(default ./voicevox_core)
-    -v|--version \$version                     ダウンロードするvoicevox_coreのバージョンの指定(default latest)
+    -o|--output \$directory                    出力先の指定(default ./sharevox_core)
+    -v|--version \$version                     ダウンロードするsharevox_coreのバージョンの指定(default latest)
     --additional-libraries-version \$version   追加でダウンロードするライブラリのバージョン
     --accelerator \$accelerator                ダウンロードするacceleratorを指定する(cpu,cudaを指定可能.cudaはlinuxのみ)
     --cpu-arch \$cpu_arch                      ダウンロードするcpuのアーキテクチャを指定する
@@ -15,7 +15,7 @@ EOM
   exit 2
 }
 
-voicevox_core_repository_base_url="https://github.com/VOICEVOX/voicevox_core"
+voicevox_core_repository_base_url="https://github.com/SHAREVOX/sharevox_core"
 voicevox_additional_libraries_base_url="https://github.com/VOICEVOX/voicevox_additional_libraries"
 open_jtalk_dict_url="https://jaist.dl.sourceforge.net/project/open-jtalk/Dictionary/open_jtalk_dic-1.11/open_jtalk_dic_utf_8-1.11.tar.gz"
 open_jtalk_dict_dir_name="open_jtalk_dic_utf_8-1.11"
@@ -29,7 +29,7 @@ voicevox_core_releases_url(){
   if [ "$os" = "linux" ] && [ "$accelerator" = "cuda" ];then
     accelerator="gpu"
   fi
-  url="$voicevox_core_repository_base_url/releases/download/$version/voicevox_core-$os-$cpu_arch-$accelerator-$version.zip"
+  url="$voicevox_core_repository_base_url/releases/download/$version/sharevox_core-$os-$cpu_arch-$accelerator-$version.zip"
   echo "$url"
 }
 
@@ -114,7 +114,7 @@ cpu_arch=""
 version="latest"
 additional_libraries_version="latest"
 accelerator=""
-output="./voicevox_core"
+output="./sharevox_core"
 min=""
 
 
@@ -181,7 +181,7 @@ fi
 
 echo "対象OS:$os"
 echo "対象CPUアーキテクチャ:$cpu_arch"
-echo "ダウンロードvoicevox_coreバージョン:$version"
+echo "ダウンロードsharevox_coreバージョン:$version"
 echo "ダウンロードアーティファクトタイプ:$accelerator"
 
 if [ "$additional_libraries_version" != "" ];then

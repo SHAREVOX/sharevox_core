@@ -1,6 +1,6 @@
 # voicevox\_core\_python\_api
 
-VOICEVOX CORE の Python バインディングです。
+SHAREVOX CORE の Python バインディングです。
 
 ## 環境構築
 
@@ -39,7 +39,7 @@ venv を作ったらその venv 上で Maturin をインストールします。
 ├── Cargo.toml                        : Rustプロジェクトとしてのマニフェストファイルです。
 ├── pyproject.toml
 ├── python                            : このディレクトリの内容がwhlに入ります。
-│   └── voicevox_core
+│   └── sharevox_core
 │       ├── __init__.py
 │       ├── _load_dlls.py
 │       ├── _models.py
@@ -56,7 +56,7 @@ venv を作ったらその venv 上で Maturin をインストールします。
 
 ## ビルド
 
-`maturin develop` で Rust のコードが pyd として python/voicevox\_core 下に保存された後、`editable` なパッケージとしてインストールされます。
+`maturin develop` で Rust のコードが pyd として python/sharevox\_core 下に保存された後、`editable` なパッケージとしてインストールされます。
 
 ```console
 ❯ maturin develop --locked

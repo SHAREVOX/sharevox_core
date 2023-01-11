@@ -1,10 +1,10 @@
 # Python のサンプルコード
 
-python から voicevox_core ライブラリを使用するためのサンプルコードです。
+python から sharevox_core ライブラリを使用するためのサンプルコードです。
 
 ## サンプル実行方法
 
-まず、この README があるディレクトリで、[Downloader を使用して voicevox_core をダウンロードします](../../docs/downloads/download.md#default)。  
+まず、この README があるディレクトリで、[Downloader を使用して sharevox_core をダウンロードします](../../docs/downloads/download.md#default)。  
 次に下記コマンドを実行して python のサンプルを実行します。
 
 ```bash

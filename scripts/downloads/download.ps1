@@ -2,7 +2,7 @@
 
 <#
 	.DESCRIPTION
-	voicevox_coreをダウンロードするためのスクリプト
+	sharevox_coreをダウンロードするためのスクリプト
 #>
 
 
@@ -11,11 +11,11 @@ Param(
 	[String]
 	[Alias("o")]
 	# 出力先の指定
-	$Output = "./voicevox_core",
+	$Output = "./sharevox_core",
 	[Parameter()]
 	[String]
 	[Alias("v")]
-	# ダウンロードするvoicevox_coreのバージョンの指定
+	# ダウンロードするsharevox_coreのバージョンの指定
 	$Version = "latest",
 	[Parameter()]
 	[String]
@@ -41,13 +41,13 @@ If (-Not(Split-Path $Output -IsAbsolute)){
   $Output=Resolve-Path $Output
 }
 
-$VoicevoxCoreRepositoryBaseUrl="https://github.com/VOICEVOX/voicevox_core"
+$VoicevoxCoreRepositoryBaseUrl="https://github.com/SHAREVOX/sharevox_core"
 $VoicevoxAdditionalLibrariesBaseUrl="https://github.com/VOICEVOX/voicevox_additional_libraries"
 $OpenJtalkDictUrl="https://jaist.dl.sourceforge.net/project/open-jtalk/Dictionary/open_jtalk_dic-1.11/open_jtalk_dic_utf_8-1.11.tar.gz"
 $OpenJtalkDictDirName="open_jtalk_dic_utf_8-1.11"
 
 Function Voicevox-Core-Releases-Url($Os,$CpuArch,$Accelerator,$Version){
-	"${VoicevoxCoreRepositoryBaseUrl}/releases/download/${Version}/voicevox_core-${Os}-${CpuArch}-${Accelerator}-${Version}.zip"
+	"${VoicevoxCoreRepositoryBaseUrl}/releases/download/${Version}/sharevox_core-${Os}-${CpuArch}-${Accelerator}-${Version}.zip"
 }
 
 Function Voicevox-Additional-Libraries-Releases-Url($Os,$CpuArch,$Accelerator,$Version){
@@ -136,14 +136,14 @@ If ( $AdditionalLibrariesVersion -eq "latest" ){
 
 echo "対象OS:$Os"
 echo "対象CPUアーキテクチャ:$cpu_arch"
-echo "ダウンロードvoicevox_coreバージョン:$version"
+echo "ダウンロードsharevox_coreバージョン:$version"
 echo "ダウンロードアーティファクトタイプ:$Accelerator"
 echo "出力先:$Output"
 
 $VoicevoxCoreUrl=Voicevox-Core-Releases-Url "$Os" "$CpuArch" "$Accelerator" "$Version"
 $VoicevoxAdditionalLibrariesUrl=Voicevox-Additional-Libraries-Releases-Url "$Os" "$CpuArch" "$Accelerator" "$AdditionalLibrariesVersion"
 
-Download-and-Extract "voicevox_core" "$VoicevoxCoreUrl" "$Output"
+Download-and-Extract "sharevox_core" "$VoicevoxCoreUrl" "$Output"
 
 if ( -not $Min ){
 	Download-and-Extract "open_jtalk" "$OpenJtalkDictUrl" "$OpenJtalkOutput"

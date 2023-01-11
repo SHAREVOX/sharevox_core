@@ -1,15 +1,15 @@
-# VOICEVOX CORE
+# SHAREVOX CORE
 
-## **現在のmainブランチは工事中なので正しく動かないことがあります。[バージョン0.13.0](https://github.com/VOICEVOX/voicevox_core/tree/0.13.0)をご利用ください。**
+## **現在のmainブランチは工事中なので正しく動かないことがあります。[バージョン0.1.3](https://github.com/SHAREVOX/sharevox_core/tree/0.1.3)をご利用ください。**
 
-[![dependency status](https://deps.rs/repo/github/VOICEVOX/voicevox_core/status.svg)](https://deps.rs/repo/github/VOICEVOX/voicevox_core)
+[![dependency status](https://deps.rs/repo/github/SHAREVOX/sharevox_core/status.svg)](https://deps.rs/repo/github/SHAREVOX/sharevox_core)
 
-[VOICEVOX](https://voicevox.hiroshiba.jp/) の音声合成コア。  
-[Releases](https://github.com/VOICEVOX/voicevox_core/releases) にビルド済みのコアライブラリ（.so/.dll/.dylib）があります。
+[SHAREVOX](https://sharevox.app/) の音声合成コア。  
+[Releases](https://github.com/SHAREVOX/sharevox_core/releases) にビルド済みのコアライブラリ（.so/.dll/.dylib）があります。
 
-（エディターは [VOICEVOX](https://github.com/VOICEVOX/voicevox/) 、
-エンジンは [VOICEVOX ENGINE](https://github.com/VOICEVOX/voicevox_engine/) 、
-全体構成は [こちら](https://github.com/VOICEVOX/voicevox/blob/main/docs/%E5%85%A8%E4%BD%93%E6%A7%8B%E6%88%90.md) に詳細があります。）
+（エディターは [SHAREVOX](https://github.com/SHAREVOX/sharevox/) 、
+エンジンは [SHAREVOX ENGINE](https://github.com/SHAREVOX/sharevox_engine/) 、
+全体構成は [こちら](https://github.com/SHAREVOX/sharevox/blob/main/docs/%E5%85%A8%E4%BD%93%E6%A7%8B%E6%88%90.md) に詳細があります。）
 
 ## 環境構築
 
@@ -20,14 +20,14 @@ Downloader を用いて環境構築を行う場合
 PowerShell で下記コマンドを実行してください
 
 ```PowerShell
-Invoke-WebRequest https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download.ps1 -OutFile ./download.ps1
+Invoke-WebRequest https://github.com/SHAREVOX/sharevox_core/releases/latest/download/download.ps1 -OutFile ./download.ps1
 ./download.ps1
 ```
 
 ### Linux/macOS の場合
 
 ```bash
-curl -sSfL https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download.sh | bash -s
+curl -sSfL https://github.com/SHAREVOX/sharevox_core/releases/latest/download/download.sh | bash -s
 ```
 
 詳細な Downloader の使い方については [こちら](./docs/downloads/download.md) を参照してください
@@ -45,7 +45,7 @@ Raspberry Pi 用の ONNX Runtime は以下からダウンロードできます�
 動作には、libgomp のインストールが必要です。
 -->
 
-1. まず [Releases](https://github.com/VOICEVOX/voicevox_core/releases/latest) からダウンロードしたコアライブラリの zip を、適当なディレクトリ名で展開します。CUDA 版、DirectML 版はかならずその zip ファイルをダウンロードしてください。
+1. まず [Releases](https://github.com/SHAREVOX/sharevox_core/releases/latest) からダウンロードしたコアライブラリの zip を、適当なディレクトリ名で展開します。CUDA 版、DirectML 版はかならずその zip ファイルをダウンロードしてください。
 2. [Open JTalk から配布されている辞書ファイル](https://jaist.dl.sourceforge.net/project/open-jtalk/Dictionary/open_jtalk_dic-1.11/open_jtalk_dic_utf_8-1.11.tar.gz) をダウンロードしてコアライブラリを展開したディレクトリに展開してください。
 3. CUDA や DirectML を利用する場合は、 [追加ライブラリ](https://github.com/VOICEVOX/voicevox_additional_libraries/releases/latest) をダウンロードして、コアライブラリを展開したディレクトリに展開してください。
 
@@ -68,7 +68,7 @@ DirectX12 に対応した GPU を搭載した Windows PC では DirectML を用�
 DirectML 版を利用するには Downloader の実行が必要です。  
 詳細は [DirectML 版をダウンロードする場合](./docs/downloads/download.md#directml) を参照してください
 
-macOS の場合、CUDA の macOS サポートは現在終了しているため、VOICEVOX CORE の macOS 向けコアライブラリも CUDA, CUDNN を利用しない CPU 版のみの提供となります。
+macOS の場合、CUDA の macOS サポートは現在終了しているため、SHAREVOX CORE の macOS 向けコアライブラリも CUDA, CUDNN を利用しない CPU 版のみの提供となります。
 
 <!--
 #### Raspberry Piでの使用について
@@ -101,21 +101,21 @@ sudo apt install libgomp1
 
 ## API
 
-[API ドキュメント](https://voicevox.github.io/voicevox_core/apis/c_api/globals_func.html)をご覧ください。
+[API ドキュメント](https://sharevox.github.io/sharevox_core/apis/c_api/globals_func.html)をご覧ください。
 
 ## コアライブラリのビルド
 
-[Releases](https://github.com/VOICEVOX/voicevox_core/releases) にあるビルド済みのコアライブラリを利用せず、自分で一からビルドする場合こちらを参照してください。ビルドには [Rust](https://www.rust-lang.org/ja) ([Windows での Rust 開発環境構築手順はこちら](https://docs.microsoft.com/ja-jp/windows/dev-environment/rust/setup)) と [cmake](https://cmake.org/download/) が必要です。
+[Releases](https://github.com/SHAREVOX/sharevox_core/releases) にあるビルド済みのコアライブラリを利用せず、自分で一からビルドする場合こちらを参照してください。ビルドには [Rust](https://www.rust-lang.org/ja) ([Windows での Rust 開発環境構築手順はこちら](https://docs.microsoft.com/ja-jp/windows/dev-environment/rust/setup)) と [cmake](https://cmake.org/download/) が必要です。
 
 model フォルダにある onnx モデルはダミーのため、ノイズの混じった音声が出力されます
 
 ```bash
 # DLLをビルド
-cargo build --release -p voicevox_core_c_api
+cargo build --release -p sharevox_core_c_api
 ```
 
 ```bash
-# DLL用のヘッダファイルvoicevox_core.hを生成
+# DLL用のヘッダファイルsharevox_core.hを生成
 # cbindgenが手元にインストールされているのならそちらでも可
 cargo xtask generate-c-header 
 ```
@@ -126,13 +126,14 @@ cargo xtask generate-c-header
 cargo test
 ```
 
-## 事例紹介
+<!-- ## 事例紹介
 
 **[VOICEVOX ENGINE SHARP](https://github.com/yamachu/VoicevoxEngineSharp) [@yamachu](https://github.com/yamachu)** ･･･ VOICEVOX ENGINE の C# 実装  
 **[Node VOICEVOX Engine](https://github.com/y-chan/node-voicevox-engine) [@y-chan](https://github.com/y-chan)** ･･･ VOICEVOX ENGINE の Node.js/C++ 実装
+-->
 
 ## ライセンス
 
 ソースコードのライセンスは [MIT LICENSE](./LICENSE) です。
 
-[Releases](https://github.com/VOICEVOX/voicevox_core/releases) にあるビルド済みのコアライブラリは別ライセンスなのでご注意ください。
+[Releases](https://github.com/SHAREVOX/sharevox_core/releases) にあるビルド済みのコアライブラリは別ライセンスなのでご注意ください。

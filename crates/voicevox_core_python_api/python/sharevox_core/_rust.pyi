@@ -4,13 +4,13 @@ from typing import Final, List, Literal, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from voicevox_core import AccelerationMode, AudioQuery, Meta, SupportedDevices
+from sharevox_core import AccelerationMode, AudioQuery, Meta, SupportedDevices
 
 # METAS: Final[List[Meta]]
 SUPPORTED_DEVICES: Final[SupportedDevices]
 __version__: str
 
-class VoicevoxCore:
+class SharevoxCore:
     def __init__(
         self,
         root_dir_path: Union[Path, str],

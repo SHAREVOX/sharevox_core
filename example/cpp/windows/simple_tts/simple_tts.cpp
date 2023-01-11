@@ -33,11 +33,11 @@ int main() {
     return 0;
   }
 
-  VoicevoxResultCode result = VoicevoxResultCode::VOICEVOX_RESULT_SUCCEED;
+  SharevoxResultCode result = SharevoxResultCode::SHAREVOX_RESULT_SUCCEED;
 
   std::wcout << L"openjtalk辞書の読み込み" << std::endl;
-  result = voicevox_load_openjtalk_dict(GetOpenJTalkDict().c_str());
-  if (result != VoicevoxResultCode::VOICEVOX_RESULT_SUCCEED) {
+  result = sharevox_load_openjtalk_dict(GetOpenJTalkDict().c_str());
+  if (result != SharevoxResultCode::SHAREVOX_RESULT_SUCCEED) {
     OutErrorMessage(result);
     return 0;
   }
@@ -46,8 +46,8 @@ int main() {
   int64_t speaker_id = 0;
   int output_binary_size = 0;
   uint8_t* output_wav = nullptr;
-  result = voicevox_tts(wide_to_utf8_cppapi(speak_words).c_str(), speaker_id, &output_binary_size, &output_wav);
-  if (result != VoicevoxResultCode::VOICEVOX_RESULT_SUCCEED) {
+  result = sharevox_tts(wide_to_utf8_cppapi(speak_words).c_str(), speaker_id, &output_binary_size, &output_wav);
+  if (result != SharevoxResultCode::SHAREVOX_RESULT_SUCCEED) {
     OutErrorMessage(result);
     return 0;
   }
@@ -63,7 +63,7 @@ int main() {
   PlaySound((LPCTSTR)output_wav, nullptr, SND_MEMORY);
 
   std::wcout << L"音声データの開放" << std::endl;
-  voicevox_wav_free(output_wav);
+  sharevox_wav_free(output_wav);
 
 }
 
@@ -114,8 +114,8 @@ std::wstring GetExeDirectory() {
 /// コンソール画面にエラーメッセージを出力します。
 /// </summary>
 /// <param name="messageCode">メッセージコード</param>
-void OutErrorMessage(VoicevoxResultCode messageCode) {
-  const char* utf8Str = voicevox_error_result_to_message(messageCode);
+void OutErrorMessage(SharevoxResultCode messageCode) {
+  const char* utf8Str = sharevox_error_result_to_message(messageCode);
   std::wstring wideStr = utf8_to_wide_cppapi(utf8Str);
   std::wcout << wideStr << std::endl;
 }

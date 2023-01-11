@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-#include "voicevox_core/voicevox_core.h"
+#include "sharevox_core/sharevox_core.h"
 
 #define OUTPUT_WAV_NAME "audio.wav"
 
@@ -12,15 +12,15 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  std::string open_jtalk_dict_path("voicevox_core/open_jtalk_dic_utf_8-1.11");
+  std::string open_jtalk_dict_path("sharevox_core/open_jtalk_dic_utf_8-1.11");
   std::string text(argv[1]);
 
   std::cout << "coreの初期化中..." << std::endl;
 
-  auto initialize_options = voicevox_make_default_initialize_options();
+  auto initialize_options = sharevox_make_default_initialize_options();
   initialize_options.load_all_models = true;
   initialize_options.open_jtalk_dict_dir = open_jtalk_dict_path.c_str();
-  if (voicevox_initialize("../../../model", initialize_options) != VOICEVOX_RESULT_OK) {
+  if (sharevox_initialize("../../../model", initialize_options) != SHAREVOX_RESULT_OK) {
     std::cout << "coreの初期化に失敗しました" << std::endl;
     return 1;
   }
@@ -31,11 +31,11 @@ int main(int argc, char *argv[]) {
   size_t output_wav_size = 0;
   uint8_t *output_wav = nullptr;
 
-  auto result = voicevox_tts(text.c_str(), speaker_id,
-                             voicevox_make_default_tts_options(),
+  auto result = sharevox_tts(text.c_str(), speaker_id,
+                             sharevox_make_default_tts_options(),
                              &output_wav_size, &output_wav);
-  if (result != VOICEVOX_RESULT_OK) {
-    std::cout << voicevox_error_result_to_message(result) << std::endl;
+  if (result != SHAREVOX_RESULT_OK) {
+    std::cout << sharevox_error_result_to_message(result) << std::endl;
     return 1;
   }
 
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
   std::ofstream wav_file(OUTPUT_WAV_NAME, std::ios::binary);
   wav_file.write(reinterpret_cast<const char *>(output_wav), output_wav_size);
-  voicevox_wav_free(output_wav);
+  sharevox_wav_free(output_wav);
 
   std::cout << "音声ファイル保存完了 (" << OUTPUT_WAV_NAME << ")" << std::endl;
 

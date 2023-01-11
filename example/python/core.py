@@ -24,7 +24,7 @@ elif get_os == "Linux":
     lib_file = "libcore.so"
 
 # ライブラリ読み込み
-core_dll_path = Path(os.path.dirname(__file__) + f"/voicevox_core/{lib_file}")
+core_dll_path = Path(os.path.dirname(__file__) + f"/sharevox_core/{lib_file}")
 if not os.path.exists(core_dll_path):
     raise Exception(f"coreライブラリファイルが{core_dll_path}に存在しません")
 lib = cdll.LoadLibrary(str(core_dll_path))
@@ -55,30 +55,30 @@ lib.decode_forward.restype = c_bool
 
 lib.last_error_message.restype = c_char_p
 
-lib.voicevox_load_openjtalk_dict.argtypes = (c_char_p,)
-lib.voicevox_load_openjtalk_dict.restype = c_int
+lib.sharevox_load_openjtalk_dict.argtypes = (c_char_p,)
+lib.sharevox_load_openjtalk_dict.restype = c_int
 
-lib.voicevox_audio_query.argtypes = (c_char_p, c_int64, POINTER(c_char_p))
-lib.voicevox_audio_query.restype = c_int
+lib.sharevox_audio_query.argtypes = (c_char_p, c_int64, POINTER(c_char_p))
+lib.sharevox_audio_query.restype = c_int
 
-lib.voicevox_audio_query_from_kana.argtypes = (c_char_p, c_int64, POINTER(c_char_p))
-lib.voicevox_audio_query_from_kana.restype = c_int
+lib.sharevox_audio_query_from_kana.argtypes = (c_char_p, c_int64, POINTER(c_char_p))
+lib.sharevox_audio_query_from_kana.restype = c_int
 
-lib.voicevox_synthesis.argtypes = (c_char_p, c_int64, POINTER(c_int), POINTER(POINTER(c_uint8)))
-lib.voicevox_synthesis.restype = c_int
+lib.sharevox_synthesis.argtypes = (c_char_p, c_int64, POINTER(c_int), POINTER(POINTER(c_uint8)))
+lib.sharevox_synthesis.restype = c_int
 
-lib.voicevox_tts.argtypes = (c_char_p, c_int64, POINTER(c_int), POINTER(POINTER(c_uint8)))
-lib.voicevox_tts.restype = c_int
+lib.sharevox_tts.argtypes = (c_char_p, c_int64, POINTER(c_int), POINTER(POINTER(c_uint8)))
+lib.sharevox_tts.restype = c_int
 
-lib.voicevox_tts_from_kana.argtypes = (c_char_p, c_int64, POINTER(c_int), POINTER(POINTER(c_uint8)))
-lib.voicevox_tts_from_kana.restype = c_int
+lib.sharevox_tts_from_kana.argtypes = (c_char_p, c_int64, POINTER(c_int), POINTER(POINTER(c_uint8)))
+lib.sharevox_tts_from_kana.restype = c_int
 
-lib.voicevox_audio_query_json_free.argtypes = (c_char_p,)
+lib.sharevox_audio_query_json_free.argtypes = (c_char_p,)
 
-lib.voicevox_wav_free.argtypes = (POINTER(c_uint8),)
+lib.sharevox_wav_free.argtypes = (POINTER(c_uint8),)
 
-lib.voicevox_error_result_to_message.argtypes = (c_int,)
-lib.voicevox_load_openjtalk_dict.argtypes = (c_char_p,)
+lib.sharevox_error_result_to_message.argtypes = (c_int,)
+lib.sharevox_load_openjtalk_dict.argtypes = (c_char_p,)
 
 # ラッパー関数
 def initialize(root_dir_path: str, use_gpu: bool, cpu_num_threads=0, load_all_models=True):
@@ -124,60 +124,60 @@ def decode_forward(length: int, phonemes: array, pitches: array, durations: arra
         raise Exception(lib.last_error_message().decode())
     return output
 
-def voicevox_load_openjtalk_dict(dict_path: str):
-    errno = lib.voicevox_load_openjtalk_dict(dict_path.encode())
+def sharevox_load_openjtalk_dict(dict_path: str):
+    errno = lib.sharevox_load_openjtalk_dict(dict_path.encode())
     if errno != 0:
-        raise Exception(lib.voicevox_error_result_to_message(errno).decode())
+        raise Exception(lib.sharevox_error_result_to_message(errno).decode())
 
-def voicevox_audio_query(text: str, speaker_id: int) -> "AudioQuery":
+def sharevox_audio_query(text: str, speaker_id: int) -> "AudioQuery":
     output_json = c_char_p()
-    errno = lib.voicevox_audio_query(text.encode(), speaker_id, byref(output_json))
+    errno = lib.sharevox_audio_query(text.encode(), speaker_id, byref(output_json))
     if errno != 0:
-        raise Exception(lib.voicevox_error_result_to_message(errno).decode())
+        raise Exception(lib.sharevox_error_result_to_message(errno).decode())
     audio_query = json.loads(output_json.value)
-    lib.voicevox_audio_query_json_free(output_json)
+    lib.sharevox_audio_query_json_free(output_json)
     return audio_query
 
-def voicevox_audio_query_from_kana(text: str, speaker_id: int) -> "AudioQuery":
+def sharevox_audio_query_from_kana(text: str, speaker_id: int) -> "AudioQuery":
     output_json = c_char_p()
-    errno = lib.voicevox_audio_query_from_kana(text.encode(), speaker_id, byref(output_json))
+    errno = lib.sharevox_audio_query_from_kana(text.encode(), speaker_id, byref(output_json))
     if errno != 0:
-        raise Exception(lib.voicevox_error_result_to_message(errno).decode())
+        raise Exception(lib.sharevox_error_result_to_message(errno).decode())
     audio_query = json.loads(output_json.value)
-    lib.voicevox_audio_query_json_free(output_json)
+    lib.sharevox_audio_query_json_free(output_json)
     return audio_query
 
-def voicevox_synthesis(audio_query: "AudioQuery", speaker_id: int) -> bytes:
+def sharevox_synthesis(audio_query: "AudioQuery", speaker_id: int) -> bytes:
     output_binary_size = c_int()
     output_wav = POINTER(c_uint8)()
-    errno = lib.voicevox_synthesis(json.dumps(audio_query).encode(), speaker_id, byref(output_binary_size), byref(output_wav))
+    errno = lib.sharevox_synthesis(json.dumps(audio_query).encode(), speaker_id, byref(output_binary_size), byref(output_wav))
     if errno != 0:
-        raise Exception(lib.voicevox_error_result_to_message(errno).decode())
+        raise Exception(lib.sharevox_error_result_to_message(errno).decode())
     output = create_string_buffer(output_binary_size.value * sizeof(c_uint8))
     memmove(output, output_wav, output_binary_size.value * sizeof(c_uint8))
-    lib.voicevox_wav_free(output_wav)
+    lib.sharevox_wav_free(output_wav)
     return output
 
-def voicevox_tts(text: str, speaker_id: int) -> bytes:
+def sharevox_tts(text: str, speaker_id: int) -> bytes:
     output_binary_size = c_int()
     output_wav = POINTER(c_uint8)()
-    errno = lib.voicevox_tts(text.encode(), speaker_id, byref(output_binary_size), byref(output_wav))
+    errno = lib.sharevox_tts(text.encode(), speaker_id, byref(output_binary_size), byref(output_wav))
     if errno != 0:
-        raise Exception(lib.voicevox_error_result_to_message(errno).decode())
+        raise Exception(lib.sharevox_error_result_to_message(errno).decode())
     output = create_string_buffer(output_binary_size.value * sizeof(c_uint8))
     memmove(output, output_wav, output_binary_size.value * sizeof(c_uint8))
-    lib.voicevox_wav_free(output_wav)
+    lib.sharevox_wav_free(output_wav)
     return output
 
-def voicevox_tts_from_kana(text: str, speaker_id: int) -> bytes:
+def sharevox_tts_from_kana(text: str, speaker_id: int) -> bytes:
     output_binary_size = c_int()
     output_wav = POINTER(c_uint8)()
-    errno = lib.voicevox_tts_from_kana(text.encode(), speaker_id, byref(output_binary_size), byref(output_wav))
+    errno = lib.sharevox_tts_from_kana(text.encode(), speaker_id, byref(output_binary_size), byref(output_wav))
     if errno != 0:
-        raise Exception(lib.voicevox_error_result_to_message(errno).decode())
+        raise Exception(lib.sharevox_error_result_to_message(errno).decode())
     output = create_string_buffer(output_binary_size.value * sizeof(c_uint8))
     memmove(output, output_wav, output_binary_size.value * sizeof(c_uint8))
-    lib.voicevox_wav_free(output_wav)
+    lib.sharevox_wav_free(output_wav)
     return output
 
 def finalize():

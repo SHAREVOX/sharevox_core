@@ -1,11 +1,11 @@
 [package]
-name = "voicevox_core_python_api"
+name = "sharevox_core_python_api"
 version = "0.0.0"
 edition.workspace = true
 publish.workspace = true
 
 [package.metadata.maturin]
-name = "voicevox_core._rust"
+name = "sharevox_core._rust"
 python-source = "python"
 
 [lib]

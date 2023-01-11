@@ -1,5 +1,5 @@
 use self::engine::*;
-use self::result_code::VoicevoxResultCode;
+use self::result_code::SharevoxResultCode;
 use self::status::*;
 use super::*;
 use once_cell::sync::Lazy;
@@ -466,36 +466,36 @@ pub static SUPPORTED_DEVICES_CSTRING: Lazy<CString> =
 //     SPEAKER_ID_MAP.get(&speaker_id).copied()
 // }
 
-pub const fn error_result_to_message(result_code: VoicevoxResultCode) -> &'static str {
+pub const fn error_result_to_message(result_code: SharevoxResultCode) -> &'static str {
     // C APIのため、messageには必ず末尾にNULL文字を追加する
-    use VoicevoxResultCode::*;
+    use SharevoxResultCode::*;
     match result_code {
-        VOICEVOX_RESULT_NOT_LOADED_OPENJTALK_DICT_ERROR => {
+        SHAREVOX_RESULT_NOT_LOADED_OPENJTALK_DICT_ERROR => {
             "OpenJTalkの辞書が読み込まれていません\0"
         }
-        VOICEVOX_RESULT_LOAD_MODEL_ERROR => {
+        SHAREVOX_RESULT_LOAD_MODEL_ERROR => {
             "modelデータ読み込み中にOnnxruntimeエラーが発生しました\0"
         }
-        VOICEVOX_RESULT_LOAD_METAS_ERROR => "メタデータ読み込みに失敗しました\0",
+        SHAREVOX_RESULT_LOAD_METAS_ERROR => "メタデータ読み込みに失敗しました\0",
 
-        VOICEVOX_RESULT_GPU_SUPPORT_ERROR => "GPU機能をサポートすることができません\0",
-        VOICEVOX_RESULT_GET_SUPPORTED_DEVICES_ERROR => {
+        SHAREVOX_RESULT_GPU_SUPPORT_ERROR => "GPU機能をサポートすることができません\0",
+        SHAREVOX_RESULT_GET_SUPPORTED_DEVICES_ERROR => {
             "サポートされているデバイス情報取得中にエラーが発生しました\0"
         }
 
-        VOICEVOX_RESULT_OK => "エラーが発生しませんでした\0",
-        VOICEVOX_RESULT_UNINITIALIZED_STATUS_ERROR => "Statusが初期化されていません\0",
-        VOICEVOX_RESULT_INVALID_SPEAKER_ID_ERROR => "無効なspeaker_idです\0",
-        VOICEVOX_RESULT_INVALID_MODEL_INDEX_ERROR => "無効なmodel_indexです\0",
-        VOICEVOX_RESULT_INFERENCE_ERROR => "推論に失敗しました\0",
-        VOICEVOX_RESULT_EXTRACT_FULL_CONTEXT_LABEL_ERROR => {
+        SHAREVOX_RESULT_OK => "エラーが発生しませんでした\0",
+        SHAREVOX_RESULT_UNINITIALIZED_STATUS_ERROR => "Statusが初期化されていません\0",
+        SHAREVOX_RESULT_INVALID_SPEAKER_ID_ERROR => "無効なspeaker_idです\0",
+        SHAREVOX_RESULT_INVALID_MODEL_INDEX_ERROR => "無効なmodel_indexです\0",
+        SHAREVOX_RESULT_INFERENCE_ERROR => "推論に失敗しました\0",
+        SHAREVOX_RESULT_EXTRACT_FULL_CONTEXT_LABEL_ERROR => {
             "入力テキストからのフルコンテキストラベル抽出に失敗しました\0"
         }
-        VOICEVOX_RESULT_INVALID_UTF8_INPUT_ERROR => "入力テキストが無効なUTF-8データでした\0",
-        VOICEVOX_RESULT_PARSE_KANA_ERROR => {
+        SHAREVOX_RESULT_INVALID_UTF8_INPUT_ERROR => "入力テキストが無効なUTF-8データでした\0",
+        SHAREVOX_RESULT_PARSE_KANA_ERROR => {
             "入力テキストをAquesTalkライクな読み仮名としてパースすることに失敗しました\0"
         }
-        VOICEVOX_RESULT_INVALID_AUDIO_QUERY_ERROR => "無効なaudio_queryです\0",
+        SHAREVOX_RESULT_INVALID_AUDIO_QUERY_ERROR => "無効なaudio_queryです\0",
         SHAREVOX_RESULT_LOAD_LIBRARIES_ERROR => "libraries.jsonの読み込みに失敗しました\0",
         SHAREVOX_RESULT_LOAD_MODEL_CONFIG_ERROR => "model_config.jsonの読み込みに失敗しました\0",
         SHAREVOX_RESULT_INVALID_LIBRARY_UUID_ERROR => "無効なlibrary_uuidです\0",
@@ -731,7 +731,7 @@ mod tests {
 
     // #[rstest]
     // fn predict_intonation_works() {
-    //     let internal = VoicevoxCore::new_with_mutex();
+    //     let internal = SharevoxCore::new_with_mutex();
     //     internal
     //         .lock()
     //         .unwrap()
