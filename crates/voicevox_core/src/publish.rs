@@ -114,11 +114,9 @@ impl VoicevoxCore {
         accent_vector: &[i64],
         speaker_id: u32,
     ) -> Result<(Vec<f32>, Vec<f32>)> {
-        self.synthesis_engine.inference_core_mut().predict_pitch_and_duration(
-            phoneme_vector,
-            accent_vector,
-            speaker_id,
-        )
+        self.synthesis_engine
+            .inference_core_mut()
+            .predict_pitch_and_duration(phoneme_vector, accent_vector, speaker_id)
     }
 
     pub fn decode(
@@ -718,10 +716,11 @@ mod tests {
         ];
         let accent_vector = vec![0; phoneme_vector.len()];
 
-        let result = internal
-            .lock()
-            .unwrap()
-            .predict_pitch_and_duration(&phoneme_vector, &accent_vector, 0);
+        let result =
+            internal
+                .lock()
+                .unwrap()
+                .predict_pitch_and_duration(&phoneme_vector, &accent_vector, 0);
 
         assert!(result.is_ok(), "{:?}", result);
 
@@ -790,12 +789,11 @@ mod tests {
         let pitch_vector = vec![5.5; phoneme_vector.len()];
         let duration_vector = vec![0.1; phoneme_vector.len()];
 
-        let result = internal.lock().unwrap().decode(
-            &phoneme_vector,
-            &pitch_vector,
-            &duration_vector,
-            0,
-        );
+        let result =
+            internal
+                .lock()
+                .unwrap()
+                .decode(&phoneme_vector, &pitch_vector, &duration_vector, 0);
 
         assert!(result.is_ok(), "{:?}", result);
         assert_eq!(
