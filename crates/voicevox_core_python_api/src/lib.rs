@@ -121,7 +121,7 @@ impl VoicevoxCore {
         self.inner.is_model_loaded(speaker_id)
     }
 
-    fn variance_forward<'py>(
+    fn predict_pitch_and_duration<'py>(
         &mut self,
         phoneme_vector: &'py PyArray<i64, Ix1>,
         accent_vector: &'py PyArray<i64, Ix1>,
@@ -130,7 +130,7 @@ impl VoicevoxCore {
     ) -> VarianceForward<'py> {
         let (pitch, duration) = self
             .inner
-            .variance_forward(
+            .predict_pitch_and_duration(
                 &phoneme_vector.to_vec()?,
                 &accent_vector.to_vec()?,
                 speaker_id,
@@ -142,7 +142,7 @@ impl VoicevoxCore {
         ))
     }
 
-    fn decode_forward<'py>(
+    fn decode<'py>(
         &mut self,
         phoneme_vector: &'py PyArray<i64, Ix1>,
         pitch_vector: &'py PyArray<f32, Ix1>,
@@ -152,7 +152,7 @@ impl VoicevoxCore {
     ) -> PyResult<&'py PyArray<f32, Ix1>> {
         let decoded = self
             .inner
-            .decode_forward(
+            .decode(
                 &phoneme_vector.to_vec()?,
                 &pitch_vector.to_vec()?,
                 &duration_vector.to_vec()?,

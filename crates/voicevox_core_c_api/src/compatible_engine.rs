@@ -88,7 +88,7 @@ pub extern "C" fn variance_forward(
     pitch_output: *mut f32,
     duration_output: *mut f32,
 ) -> bool {
-    let result = lock_internal().variance_forward(
+    let result = lock_internal().predict_pitch_and_duration(
         unsafe { std::slice::from_raw_parts_mut(phoneme_list, length as usize) },
         unsafe { std::slice::from_raw_parts_mut(accent_list, length as usize) },
         unsafe { *speaker_id as u32 },
@@ -120,7 +120,7 @@ pub extern "C" fn decode_forward(
     output: *mut f32,
 ) -> bool {
     let length = length as usize;
-    let result = lock_internal().decode_forward(
+    let result = lock_internal().decode(
         unsafe { std::slice::from_raw_parts_mut(phonemes, length) },
         unsafe { std::slice::from_raw_parts_mut(pitches, length) },
         unsafe { std::slice::from_raw_parts_mut(durations, length) },

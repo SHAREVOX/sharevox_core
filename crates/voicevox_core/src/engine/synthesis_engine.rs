@@ -128,7 +128,7 @@ impl SynthesisEngine {
     ) -> Result<(Vec<AccentPhraseModel>, Vec<f32>)> {
         let (_, phoneme_id_list, accent_id_list) = SynthesisEngine::initial_process(accent_phrases);
 
-        let (pitches, phoneme_length) = self.inference_core_mut().variance_forward(
+        let (pitches, phoneme_length) = self.inference_core_mut().predict_pitch_and_duration(
             &phoneme_id_list,
             &accent_id_list,
             speaker_id,
@@ -194,7 +194,7 @@ impl SynthesisEngine {
         } else {
             pitches = self
                 .inference_core_mut()
-                .variance_forward(&phoneme_id_list, &accent_id_list, speaker_id)?
+                .predict_pitch_and_duration(&phoneme_id_list, &accent_id_list, speaker_id)?
                 .0;
         }
 
@@ -312,7 +312,7 @@ impl SynthesisEngine {
         }
 
         self.inference_core_mut()
-            .decode_forward(&phoneme_id_list, &pitches, &durations, speaker_id)
+            .decode(&phoneme_id_list, &pitches, &durations, speaker_id)
     }
 
     pub fn synthesis_wave_format(
