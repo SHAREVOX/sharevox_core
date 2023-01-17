@@ -84,7 +84,7 @@ jobs:
             artifact_name: osx-x64-cpu
             whl_local_version: cpu
             use_cuda: false
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ github.event.inputs.code_signing == 'true' && startsWith(matrix.os, 'windows') && 'self-hosted' || matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.8
@@ -152,10 +152,10 @@ jobs:
         if: startsWith(matrix.os, 'windows') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
-          bash build_util/codesign.bash "artifact/${{ env.ASSET_NAME }}/sharevox_core.dll"
-        env:
-          CERT_BASE64: ${{ secrets.CERT_BASE64 }}
-          CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
+          bash build_util/codesign_sv.bash "artifact/${{ env.ASSET_NAME }}/sharevox_core.dll"
+        # env:
+        #   CERT_BASE64: ${{ secrets.CERT_BASE64 }}
+        #   CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
       - name: Archive artifact
         shell: bash
         if: (!contains(matrix.os , 'windows'))
