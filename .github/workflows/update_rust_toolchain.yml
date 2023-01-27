@@ -1,10 +1,11 @@
 name: update rust toolchain
 on:
-  push:
-    branches:
-      - main
-  schedule:
-    - cron: "0 0 * * *"
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  # schedule:
+  #   - cron: "0 0 * * *"
 jobs:
   update-rust-toolchain:
     runs-on: ubuntu-latest
