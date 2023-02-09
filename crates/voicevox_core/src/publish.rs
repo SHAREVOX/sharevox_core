@@ -429,11 +429,22 @@ impl InferenceCore {
 
         let length_regulated_vector: Vec<f32>;
         if length_regulator_type == "normal" {
-            length_regulated_vector =
-                status.length_regulator(phoneme_vector.len(), embedded_vector, duration_vector);
+            length_regulated_vector = status.length_regulator(
+                phoneme_vector.len(),
+                embedded_vector,
+                duration_vector,
+                None,
+                None,
+                None,
+            );
         } else if length_regulator_type == "gaussian" {
-            length_regulated_vector =
-                status.gaussian_upsampling(phoneme_vector.len(), embedded_vector, duration_vector);
+            length_regulated_vector = status.gaussian_upsampling(
+                phoneme_vector.len(),
+                embedded_vector,
+                duration_vector,
+                None,
+                None,
+            );
         } else {
             return Err(Error::InvalidLengthRegulator {
                 length_regulator_type: length_regulator_type.to_owned(),
