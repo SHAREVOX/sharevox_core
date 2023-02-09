@@ -670,8 +670,7 @@ mod tests {
         embedded_vector.append(&mut vec![1.; 192]);
         // round(0.11 * 93.75) = 10, round(0.21 * 93.75) = 20
         let durations = vec![0.11, 0.21];
-        let result =
-            status.gaussian_upsampling(2, &embedded_vector, &durations, 93.75, 2);
+        let result = status.gaussian_upsampling(2, &embedded_vector, &durations, 93.75, 2);
         assert_eq!(result.len(), 192 * 30 * 2);
     }
 }
