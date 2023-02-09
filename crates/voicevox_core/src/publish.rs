@@ -341,13 +341,12 @@ impl InferenceCore {
                 return Err(Error::InvalidSpeakerId { speaker_id });
             };
 
-        // NOTE: statusのusable_model_mapが不正でありうる場合、エラーを報告すべき？
-        let start_speaker_id = status
-            .usable_model_map
-            .get(&library_uuid)
-            .unwrap()
-            .model_config
-            .start_id as i64;
+        let start_speaker_id = if let Some(model_data) = status.usable_model_map.get(&library_uuid)
+        {
+            model_data.model_config.start_id as i64
+        } else {
+            return Err(Error::InvalidLibraryUuid { library_uuid });
+        };
         let model_speaker_id = speaker_id as i64 - start_speaker_id;
 
         let mut phoneme_vector_array = NdArray::new(
@@ -394,13 +393,11 @@ impl InferenceCore {
                 return Err(Error::InvalidSpeakerId { speaker_id });
             };
 
-        // NOTE: statusのusable_model_mapが不正でありうる場合、エラーを報告すべき？
-        let model_config = status
-            .usable_model_map
-            .get(&library_uuid)
-            .unwrap()
-            .model_config
-            .clone();
+        let model_config = if let Some(model_data) = status.usable_model_map.get(&library_uuid) {
+            model_data.model_config.clone()
+        } else {
+            return Err(Error::InvalidLibraryUuid { library_uuid });
+        };
         let start_speaker_id = model_config.start_id as i64;
         let model_speaker_id = speaker_id as i64 - start_speaker_id;
 
