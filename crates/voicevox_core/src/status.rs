@@ -145,6 +145,7 @@ impl SupportedDevices {
 pub struct ModelConfig {
     pub length_regulator: String,
     pub start_id: usize,
+    pub synthesis_system: Option<String>,
 }
 
 fn open_metas(root_dir_path: &Path, library_uuid: &str) -> Result<Vec<Meta>> {
@@ -645,8 +646,9 @@ mod tests {
 
         let pitch_vector = vec![5.5, 6.0];
         let durations = vec![0.1, 0.2];
-        let result = status.length_regulator(2, &pitch_vector, &durations, Some(100.), Some(1), Some(1));
-        assert_eq!(result.len(), 1 * 30 * 1);
+        let result =
+            status.length_regulator(2, &pitch_vector, &durations, Some(100.), Some(1), Some(1));
+        assert_eq!(result.len(), 30); // 1 * 30 * 1
         let mut expected = vec![5.5; 10];
         expected.append(&mut vec![6.0; 20]);
         assert_eq!(result, expected);

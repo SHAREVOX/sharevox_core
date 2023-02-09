@@ -40,6 +40,9 @@ pub(crate) fn into_result_code_with_error(result: CApiResult<()>) -> SharevoxRes
             Err(RustApi(InvalidLengthRegulator { .. })) => {
                 SHAREVOX_RESULT_INVALID_LENGTH_REGULATOR_ERROR
             }
+            Err(RustApi(InvalidSynthesisSystem { .. })) => {
+                SHAREVOX_RESULT_INVALID_SYNTHESIS_SYSTEM_ERROR
+            }
             Err(InvalidUtf8Input) => SHAREVOX_RESULT_INVALID_UTF8_INPUT_ERROR,
             Err(InvalidAudioQuery(_)) => SHAREVOX_RESULT_INVALID_AUDIO_QUERY_ERROR,
         }
