@@ -458,18 +458,16 @@ impl Status {
         length: usize,
         embedded_vector: &[f32],
         durations: &[f32],
-        regulation_base: Option<f32>,
-        dim: Option<usize>,
-        upsample_rate: Option<usize>,
+        regulation_base: f32,
+        dim: usize,
+        upsample_rate: usize,
     ) -> Vec<f32> {
         let mut length_regulated_vector = Vec::new();
         for i in 0..length {
             // numpy/pythonのroundと挙動を合わせるため、round_ties_even_を用いている
-            let regulation_size = ((durations[i] * regulation_base.unwrap_or(93.75))
-                .round_ties_even_() as usize)
-                * upsample_rate.unwrap_or(2); // 24000 / 256 = 93.75
+            let regulation_size =
+                ((durations[i] * regulation_base).round_ties_even_() as usize) * upsample_rate;
             let start = length_regulated_vector.len();
-            let dim = dim.unwrap_or(Status::HIDDEN_SIZE);
             let expand_size = regulation_size * dim;
             length_regulated_vector.resize_with(start + expand_size, Default::default);
             for j in (0..expand_size).step_by(dim) {
@@ -486,15 +484,14 @@ impl Status {
         length: usize,
         embedded_vector: &[f32],
         durations: &[f32],
-        regulation_base: Option<f32>,
-        upsample_rate: Option<usize>,
+        regulation_base: f32,
+        upsample_rate: usize,
     ) -> Vec<f32> {
         let mut int_durations = vec![0; length];
         for i in 0..length {
             // numpy/pythonのroundと挙動を合わせるため、round_ties_even_を用いている
-            let regulation_size = ((durations[i] * regulation_base.unwrap_or(93.75))
-                .round_ties_even_() as usize)
-                * upsample_rate.unwrap_or(2); // 24000 / 256 = 93.75
+            let regulation_size =
+                ((durations[i] * regulation_base).round_ties_even_() as usize) * upsample_rate;
             int_durations[i] = regulation_size as i64;
         }
 
@@ -638,7 +635,14 @@ mod tests {
         embedded_vector.append(&mut vec![1.; 192]);
         // round(0.11 * 93.75) = 10, round(0.21 * 93.75) = 20
         let durations = vec![0.11, 0.21];
-        let result = status.length_regulator(2, &embedded_vector, &durations, None, None, None);
+        let result = status.length_regulator(
+            2,
+            &embedded_vector,
+            &durations,
+            93.75,
+            Status::HIDDEN_SIZE,
+            2,
+        );
         assert_eq!(result.len(), 192 * 30 * 2);
         let mut expected = vec![0.; 192 * 10 * 2];
         expected.append(&mut vec![1.; 192 * 20 * 2]);
@@ -646,8 +650,7 @@ mod tests {
 
         let pitch_vector = vec![5.5, 6.0];
         let durations = vec![0.1, 0.2];
-        let result =
-            status.length_regulator(2, &pitch_vector, &durations, Some(100.), Some(1), Some(1));
+        let result = status.length_regulator(2, &pitch_vector, &durations, 100., 1, 1);
         assert_eq!(result.len(), 30); // 1 * 30 * 1
         let mut expected = vec![5.5; 10];
         expected.append(&mut vec![6.0; 20]);
@@ -667,7 +670,8 @@ mod tests {
         embedded_vector.append(&mut vec![1.; 192]);
         // round(0.11 * 93.75) = 10, round(0.21 * 93.75) = 20
         let durations = vec![0.11, 0.21];
-        let result = status.gaussian_upsampling(2, &embedded_vector, &durations, None, None);
+        let result =
+            status.gaussian_upsampling(2, &embedded_vector, &durations, 93.75, 2);
         assert_eq!(result.len(), 192 * 30 * 2);
     }
 }

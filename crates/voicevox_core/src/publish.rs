@@ -437,18 +437,14 @@ impl InferenceCore {
             &status.embedder_session_run(&library_uuid, embedder_input_tensors)?;
 
         let length_regulated_vector: Vec<f32>;
-        let upsample_rate = if synthesis_system == "v2" {
-            Some(1)
-        } else {
-            None
-        };
+        let upsample_rate = if synthesis_system == "v2" { 1 } else { 2 };
         if length_regulator_type == "normal" {
             length_regulated_vector = status.length_regulator(
                 phoneme_vector.len(),
                 embedded_vector,
                 duration_vector,
-                None,
-                None,
+                93.75, // 48000 / 512 = 93.75
+                Status::HIDDEN_SIZE,
                 upsample_rate,
             );
         } else if length_regulator_type == "gaussian" {
@@ -456,7 +452,7 @@ impl InferenceCore {
                 phoneme_vector.len(),
                 embedded_vector,
                 duration_vector,
-                None,
+                93.75, // 48000 / 512 = 93.75
                 upsample_rate,
             );
         } else {
@@ -472,8 +468,8 @@ impl InferenceCore {
                 .unwrap(),
         );
         let mut length_regulated_pitch_vector_array;
-
         let decoder_input_tensors: Vec<&mut dyn AnyArray>;
+
         if synthesis_system == "v1" {
             decoder_input_tensors = vec![&mut length_regulated_vector_array];
         } else if synthesis_system == "v2" {
@@ -481,9 +477,9 @@ impl InferenceCore {
                 phoneme_vector.len(),
                 pitch_vector,
                 duration_vector,
-                None,
-                Some(1),
-                Some(1),
+                93.75, // 48000 / 512 = 93.75
+                1,
+                1,
             );
 
             length_regulated_pitch_vector_array = NdArray::new(
