@@ -143,10 +143,17 @@ impl SupportedDevices {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ModelConfig {
-    pub length_regulator: String,
+    pub length_regulator: LengthRegulator,
     pub start_id: usize,
     #[serde(default)]
     pub synthesis_system: SynthesisSystem,
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LengthRegulator {
+    Normal,
+    Gaussian,
 }
 
 #[derive(Default, Clone, Copy, Serialize, Deserialize)]

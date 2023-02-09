@@ -86,12 +86,6 @@ pub enum Error {
         base_error_message(SHAREVOX_RESULT_INVALID_LIBRARY_UUID_ERROR)
     )]
     InvalidLibraryUuid { library_uuid: String },
-
-    #[error(
-        "{}: {length_regulator_type:?}",
-        base_error_message(SHAREVOX_RESULT_INVALID_LENGTH_REGULATOR_ERROR)
-    )]
-    InvalidLengthRegulator { length_regulator_type: String },
 }
 
 impl PartialEq for Error {
@@ -152,14 +146,6 @@ impl PartialEq for Error {
                     cause: cause2,
                 },
             ) => (path1, cause1.to_string()) == (path2, cause2.to_string()),
-            (
-                Self::InvalidLengthRegulator {
-                    length_regulator_type: length_regulator_type1,
-                },
-                Self::InvalidLengthRegulator {
-                    length_regulator_type: length_regulator_type2,
-                },
-            ) => length_regulator_type1 == length_regulator_type2,
             _ => false,
         }
     }

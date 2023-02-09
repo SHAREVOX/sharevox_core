@@ -389,19 +389,18 @@ impl InferenceCore {
             .get_library_uuid_from_speaker_id(speaker_id)
             .ok_or(Error::InvalidSpeakerId { speaker_id })?;
 
-        let model_config = status
+        let model_config = &status
             .usable_model_map
             .get(&library_uuid)
             .ok_or_else(|| Error::InvalidLibraryUuid {
                 library_uuid: library_uuid.clone(),
             })?
-            .model_config
-            .clone();
+            .model_config;
 
         let start_speaker_id = model_config.start_id as i64;
         let model_speaker_id = speaker_id as i64 - start_speaker_id;
 
-        let length_regulator_type = &model_config.length_regulator;
+        let length_regulator_type = model_config.length_regulator;
         let synthesis_system = model_config.synthesis_system;
 
         let mut phoneme_vector_array = NdArray::new(
@@ -433,33 +432,27 @@ impl InferenceCore {
         let embedded_vector =
             &status.embedder_session_run(&library_uuid, embedder_input_tensors)?;
 
-        let length_regulated_vector: Vec<f32>;
         let upsample_rate = match synthesis_system {
             SynthesisSystem::V1 => 2,
             SynthesisSystem::V2 => 1,
         };
-        if length_regulator_type == "normal" {
-            length_regulated_vector = status.length_regulator(
+        let length_regulated_vector = match length_regulator_type {
+            LengthRegulator::Normal => status.length_regulator(
                 phoneme_vector.len(),
                 embedded_vector,
                 duration_vector,
                 93.75, // 48000 / 512 = 93.75
                 Status::HIDDEN_SIZE,
                 upsample_rate,
-            );
-        } else if length_regulator_type == "gaussian" {
-            length_regulated_vector = status.gaussian_upsampling(
+            ),
+            LengthRegulator::Gaussian => status.gaussian_upsampling(
                 phoneme_vector.len(),
                 embedded_vector,
                 duration_vector,
                 93.75, // 48000 / 512 = 93.75
                 upsample_rate,
-            );
-        } else {
-            return Err(Error::InvalidLengthRegulator {
-                length_regulator_type: length_regulator_type.to_owned(),
-            });
-        }
+            ),
+        };
         let new_length = length_regulated_vector.len() / Status::HIDDEN_SIZE;
 
         let mut length_regulated_vector_array = NdArray::new(
@@ -542,9 +535,6 @@ pub const fn error_result_to_message(result_code: SharevoxResultCode) -> &'stati
         SHAREVOX_RESULT_LOAD_LIBRARIES_ERROR => "libraries.jsonの読み込みに失敗しました\0",
         SHAREVOX_RESULT_LOAD_MODEL_CONFIG_ERROR => "model_config.jsonの読み込みに失敗しました\0",
         SHAREVOX_RESULT_INVALID_LIBRARY_UUID_ERROR => "無効なlibrary_uuidです\0",
-        SHAREVOX_RESULT_INVALID_LENGTH_REGULATOR_ERROR => {
-            "model_config.jsonのlength_regulatorが無効です\0"
-        }
     }
 }
 
