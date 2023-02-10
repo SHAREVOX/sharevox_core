@@ -226,7 +226,7 @@ jobs:
           - name: download-osx-aarch64
             target: aarch64-apple-darwin
             os: macos-11
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ github.event.inputs.code_signing == 'true' && startsWith(matrix.os, 'windows') && 'self-hosted' || matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - name: Install cross compiler for aarch64-unknown-linux-gnu
@@ -253,10 +253,10 @@ jobs:
         if: startsWith(matrix.os, 'windows') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
-          bash build_util/codesign.bash ./${{ matrix.name }}
-        env:
-          CERT_BASE64: ${{ secrets.CERT_BASE64 }}
-          CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
+          bash build_util/codesign_sv.bash ./${{ matrix.name }}
+        # env:
+        #   CERT_BASE64: ${{ secrets.CERT_BASE64 }}
+        #   CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
       - name: Upload to Release
         if: env.VERSION != 'DEBUG' && env.SKIP_UPLOADING_RELEASE_ASSET == '0'
         uses: softprops/action-gh-release@v1
