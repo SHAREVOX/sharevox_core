@@ -9,9 +9,9 @@ on:
         description: "コード署名する"
         type: boolean
         required: false
-  release:
-    types:
-      - published
+  # release:
+  #   types:
+  #     - published
   pull_request:
   push:
     branches:
@@ -84,7 +84,7 @@ jobs:
             artifact_name: osx-x64-cpu
             whl_local_version: cpu
             use_cuda: false
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ github.event.inputs.code_signing == 'true' && startsWith(matrix.os, 'windows') && 'self-hosted' || matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.8
@@ -120,9 +120,23 @@ jobs:
         shell: bash
         run: cbindgen --crate sharevox_core_c_api -o ./sharevox_core.h
       - name: build sharevox_core_c_api
+        shell: bash
         run: cargo build -p sharevox_core_c_api -vv --features ${{ matrix.features }}, --target ${{ matrix.target }} --release
         env:
           ORT_USE_CUDA: ${{ matrix.use_cuda }}
+      - name: download product model
+        if: ${{ env.VERSION != 'DEBUG' }}
+        shell: bash
+        env:
+          SHAREVOX_MODEL_ASSET_NAME: sharevox_model-${{ env.VERSION }}
+        run: |
+          mkdir download
+          curl -L "https://github.com/SHAREVOX/sharevox_core/releases/download/${{ env.VERSION }}/${{ env.SHAREVOX_MODEL_ASSET_NAME }}.zip" > download/${{ env.SHAREVOX_MODEL_ASSET_NAME }}.zip
+          7z x -o"download" download/${{ env.SHAREVOX_MODEL_ASSET_NAME }}.zip
+          rm download/${{ env.SHAREVOX_MODEL_ASSET_NAME }}.zip
+          mv model/gaussian_model.onnx download/model/
+          rm -r model
+          mv download/model model
       - name: build sharevox_core_python_api
         id: build-sharevox-core-python-api
         shell: bash
@@ -146,16 +160,16 @@ jobs:
           # libonnxruntimeについてはバージョン付のshared libraryを使用するためバージョンがついてないものを削除する
           rm -f artifact/${{ env.ASSET_NAME }}/libonnxruntime.{so,dylib}
           cp -v README.md "artifact/${{ env.ASSET_NAME }}/README.txt"
-          cp -vr model "artifact/${{ env.ASSET_NAME }}/"
+          # cp -vr model "artifact/${{ env.ASSET_NAME }}/"
           echo "${{ env.VERSION }}" > "artifact/${{ env.ASSET_NAME }}/VERSION"
       - name: Code signing (Windows)
         if: startsWith(matrix.os, 'windows') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
-          bash build_util/codesign.bash "artifact/${{ env.ASSET_NAME }}/sharevox_core.dll"
-        env:
-          CERT_BASE64: ${{ secrets.CERT_BASE64 }}
-          CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
+          bash build_util/codesign_sv.bash "artifact/${{ env.ASSET_NAME }}/sharevox_core.dll"
+        # env:
+        #   CERT_BASE64: ${{ secrets.CERT_BASE64 }}
+        #   CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
       - name: Archive artifact
         shell: bash
         run: |
@@ -212,7 +226,7 @@ jobs:
           - name: download-osx-aarch64
             target: aarch64-apple-darwin
             os: macos-11
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ github.event.inputs.code_signing == 'true' && startsWith(matrix.os, 'windows') && 'self-hosted' || matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - name: Install cross compiler for aarch64-unknown-linux-gnu
@@ -239,10 +253,10 @@ jobs:
         if: startsWith(matrix.os, 'windows') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
-          bash build_util/codesign.bash ./${{ matrix.name }}
-        env:
-          CERT_BASE64: ${{ secrets.CERT_BASE64 }}
-          CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
+          bash build_util/codesign_sv.bash ./${{ matrix.name }}
+        # env:
+        #   CERT_BASE64: ${{ secrets.CERT_BASE64 }}
+        #   CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
       - name: Upload to Release
         if: env.VERSION != 'DEBUG' && env.SKIP_UPLOADING_RELEASE_ASSET == '0'
         uses: softprops/action-gh-release@v1

@@ -37,9 +37,6 @@ pub(crate) fn into_result_code_with_error(result: CApiResult<()>) -> SharevoxRes
             Err(RustApi(LoadLibraries(_))) => SHAREVOX_RESULT_LOAD_LIBRARIES_ERROR,
             Err(RustApi(LoadModelConfig { .. })) => SHAREVOX_RESULT_LOAD_MODEL_CONFIG_ERROR,
             Err(RustApi(InvalidLibraryUuid { .. })) => SHAREVOX_RESULT_INVALID_LIBRARY_UUID_ERROR,
-            Err(RustApi(InvalidLengthRegulator { .. })) => {
-                SHAREVOX_RESULT_INVALID_LENGTH_REGULATOR_ERROR
-            }
             Err(InvalidUtf8Input) => SHAREVOX_RESULT_INVALID_UTF8_INPUT_ERROR,
             Err(InvalidAudioQuery(_)) => SHAREVOX_RESULT_INVALID_AUDIO_QUERY_ERROR,
         }

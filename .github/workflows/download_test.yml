@@ -20,7 +20,7 @@ jobs:
             download_command: cargo run -vv -p download
             download_dir: sharevox_core
             check_items: |
-              voicevox_core.dll
+              sharevox_core.dll
               model/metas.json
               open_jtalk_dic_utf_8-1.11
               README.txt
@@ -38,7 +38,7 @@ jobs:
             download_command: cargo run -vv -p download -- --cpu-arch x86
             download_dir: sharevox_core
             check_items: |
-              voicevox_core.dll
+              sharevox_core.dll
               model/metas.json
               open_jtalk_dic_utf_8-1.11
               README.txt
@@ -55,7 +55,7 @@ jobs:
             download_command: cargo run -vv -p download -- -o other_output
             download_dir: other_output
             check_items: |
-              voicevox_core.dll
+              sharevox_core.dll
               model/metas.json
               open_jtalk_dic_utf_8-1.11
               README.txt
@@ -72,7 +72,7 @@ jobs:
             download_command: cargo run -vv -p download -- --min
             download_dir: sharevox_core
             check_items: |
-              voicevox_core.dll
+              sharevox_core.dll
               model/metas.json
               README.txt
             check_not_exists_items: |
@@ -89,7 +89,7 @@ jobs:
             download_command: cargo run -vv -p download -- --device directml
             download_dir: sharevox_core
             check_items: |
-              voicevox_core.dll
+              sharevox_core.dll
               model/metas.json
               open_jtalk_dic_utf_8-1.11
               README.txt
@@ -108,7 +108,7 @@ jobs:
             download_command: cargo run -vv -p download -- --device directml --min
             download_dir: sharevox_core
             check_items: |
-              voicevox_core.dll
+              sharevox_core.dll
               model/metas.json
               README.txt
             check_not_exists_items: |
@@ -126,7 +126,7 @@ jobs:
             download_command: cargo run -vv -p download -- --device cuda
             download_dir: sharevox_core
             check_items: |
-              voicevox_core.dll
+              sharevox_core.dll
               model/metas.json
               open_jtalk_dic_utf_8-1.11
               README.txt
@@ -148,7 +148,7 @@ jobs:
             download_command: cargo run -vv -p download -- --device cuda --min
             download_dir: sharevox_core
             check_items: |
-              voicevox_core.dll
+              sharevox_core.dll
               model/metas.json
               README.txt
             check_not_exists_items: |
@@ -170,7 +170,7 @@ jobs:
             download_command: ./scripts/downloads/download.sh
             download_dir: sharevox_core
             check_items: |
-              libvoicevox_core.so
+              libsharevox_core.so
               model/metas.json
               open_jtalk_dic_utf_8-1.11
               README.txt
@@ -188,7 +188,7 @@ jobs:
             download_command: ./scripts/downloads/download.sh --cpu-arch x64
             download_dir: sharevox_core
             check_items: |
-              libvoicevox_core.so
+              libsharevox_core.so
               model/metas.json
               open_jtalk_dic_utf_8-1.11
               README.txt
@@ -206,7 +206,7 @@ jobs:
             download_command: ./scripts/downloads/download.sh --output other_output
             download_dir: other_output
             check_items: |
-              libvoicevox_core.so
+              libsharevox_core.so
               model/metas.json
               open_jtalk_dic_utf_8-1.11
               README.txt
@@ -224,7 +224,7 @@ jobs:
             download_command: ./scripts/downloads/download.sh --min
             download_dir: sharevox_core
             check_items: |
-              libvoicevox_core.so
+              libsharevox_core.so
               model/metas.json
               README.txt
             check_not_exists_items: |
@@ -242,7 +242,7 @@ jobs:
             download_command: ./scripts/downloads/download.sh --device cuda
             download_dir: sharevox_core
             check_items: |
-              libvoicevox_core.so
+              libsharevox_core.so
               model/metas.json
               open_jtalk_dic_utf_8-1.11
               README.txt
@@ -263,7 +263,7 @@ jobs:
             download_command: ./scripts/downloads/download.sh --device cuda --min
             download_dir: sharevox_core
             check_items: |
-              libvoicevox_core.so
+              libsharevox_core.so
               model/metas.json
               README.txt
             check_not_exists_items: |

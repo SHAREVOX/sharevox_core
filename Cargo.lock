@@ -2047,7 +2047,7 @@ checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
 [[package]]
 name = "onnxruntime"
 version = "0.1.0"
-source = "git+https://github.com/VOICEVOX/onnxruntime-rs.git?rev=405f62fb53df1b59b0e69adafbd1c28e4d5c2787#405f62fb53df1b59b0e69adafbd1c28e4d5c2787"
+source = "git+https://github.com/SHAREVOX/onnxruntime-rs.git?rev=a74d8b4ed5a6675b01a9e6f2945fdf92c40d78af#a74d8b4ed5a6675b01a9e6f2945fdf92c40d78af"
 dependencies = [
  "lazy_static",
  "ndarray",
@@ -2059,7 +2059,7 @@ dependencies = [
 [[package]]
 name = "onnxruntime-sys"
 version = "0.0.25"
-source = "git+https://github.com/VOICEVOX/onnxruntime-rs.git?rev=405f62fb53df1b59b0e69adafbd1c28e4d5c2787#405f62fb53df1b59b0e69adafbd1c28e4d5c2787"
+source = "git+https://github.com/SHAREVOX/onnxruntime-rs.git?rev=a74d8b4ed5a6675b01a9e6f2945fdf92c40d78af#a74d8b4ed5a6675b01a9e6f2945fdf92c40d78af"
 dependencies = [
  "flate2",
  "once_cell",

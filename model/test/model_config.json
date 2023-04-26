@@ -1,4 +1,5 @@
 {
   "length_regulator": "normal",
-  "start_id": 0
+  "start_id": 0,
+  "synthesis_system": "v1"
 }

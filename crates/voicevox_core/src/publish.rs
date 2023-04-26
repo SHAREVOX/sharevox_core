@@ -334,18 +334,16 @@ impl InferenceCore {
             .as_mut()
             .ok_or(Error::UninitializedStatus)?;
 
-        let library_uuid =
-            if let Some(library_uuid) = status.get_library_uuid_from_speaker_id(speaker_id) {
-                library_uuid
-            } else {
-                return Err(Error::InvalidSpeakerId { speaker_id });
-            };
+        let library_uuid = status
+            .get_library_uuid_from_speaker_id(speaker_id)
+            .ok_or(Error::InvalidSpeakerId { speaker_id })?;
 
-        // NOTE: statusのusable_model_mapが不正でありうる場合、エラーを報告すべき？
         let start_speaker_id = status
             .usable_model_map
             .get(&library_uuid)
-            .unwrap()
+            .ok_or_else(|| Error::InvalidLibraryUuid {
+                library_uuid: library_uuid.clone(),
+            })?
             .model_config
             .start_id as i64;
         let model_speaker_id = speaker_id as i64 - start_speaker_id;
@@ -387,58 +385,74 @@ impl InferenceCore {
             .as_mut()
             .ok_or(Error::UninitializedStatus)?;
 
-        let library_uuid =
-            if let Some(library_uuid) = status.get_library_uuid_from_speaker_id(speaker_id) {
-                library_uuid
-            } else {
-                return Err(Error::InvalidSpeakerId { speaker_id });
-            };
+        let library_uuid = status
+            .get_library_uuid_from_speaker_id(speaker_id)
+            .ok_or(Error::InvalidSpeakerId { speaker_id })?;
 
-        // NOTE: statusのusable_model_mapが不正でありうる場合、エラーを報告すべき？
-        let model_config = status
+        let model_config = &status
             .usable_model_map
             .get(&library_uuid)
-            .unwrap()
-            .model_config
-            .clone();
+            .ok_or_else(|| Error::InvalidLibraryUuid {
+                library_uuid: library_uuid.clone(),
+            })?
+            .model_config;
+
         let start_speaker_id = model_config.start_id as i64;
         let model_speaker_id = speaker_id as i64 - start_speaker_id;
+
+        let length_regulator_type = model_config.length_regulator;
+        let synthesis_system = model_config.synthesis_system;
 
         let mut phoneme_vector_array = NdArray::new(
             ndarray::arr1(phoneme_vector)
                 .into_shape([1, phoneme_vector.len()])
                 .unwrap(),
         );
-        let mut pitch_vector_array = NdArray::new(
-            ndarray::arr1(pitch_vector)
-                .into_shape([1, pitch_vector.len()])
-                .unwrap(),
-        );
         let mut speaker_id_array = NdArray::new(ndarray::arr1(&[model_speaker_id]));
 
-        let embedder_input_tensors: Vec<&mut dyn AnyArray> = vec![
-            &mut phoneme_vector_array,
-            &mut pitch_vector_array,
-            &mut speaker_id_array,
-        ];
+        let mut pitch_vector_array;
+
+        let embedder_input_tensors: Vec<&mut dyn AnyArray> = match synthesis_system {
+            SynthesisSystem::V1 => {
+                pitch_vector_array = NdArray::new(
+                    ndarray::arr1(pitch_vector)
+                        .into_shape([1, pitch_vector.len()])
+                        .unwrap(),
+                );
+
+                vec![
+                    &mut phoneme_vector_array,
+                    &mut pitch_vector_array,
+                    &mut speaker_id_array,
+                ]
+            }
+            SynthesisSystem::V2 => vec![&mut phoneme_vector_array],
+        };
 
         let embedded_vector =
             &status.embedder_session_run(&library_uuid, embedder_input_tensors)?;
 
-        let length_regulator_type = &model_config.length_regulator;
-
-        let length_regulated_vector: Vec<f32>;
-        if length_regulator_type == "normal" {
-            length_regulated_vector =
-                status.length_regulator(phoneme_vector.len(), embedded_vector, duration_vector);
-        } else if length_regulator_type == "gaussian" {
-            length_regulated_vector =
-                status.gaussian_upsampling(phoneme_vector.len(), embedded_vector, duration_vector);
-        } else {
-            return Err(Error::InvalidLengthRegulator {
-                length_regulator_type: length_regulator_type.to_owned(),
-            });
-        }
+        let upsample_rate = match synthesis_system {
+            SynthesisSystem::V1 => 2,
+            SynthesisSystem::V2 => 1,
+        };
+        let length_regulated_vector = match length_regulator_type {
+            LengthRegulator::Normal => status.length_regulator(
+                phoneme_vector.len(),
+                embedded_vector,
+                duration_vector,
+                93.75, // 48000 / 512 = 93.75
+                Status::HIDDEN_SIZE,
+                upsample_rate,
+            ),
+            LengthRegulator::Gaussian => status.gaussian_upsampling(
+                phoneme_vector.len(),
+                embedded_vector,
+                duration_vector,
+                93.75, // 48000 / 512 = 93.75
+                upsample_rate,
+            ),
+        };
         let new_length = length_regulated_vector.len() / Status::HIDDEN_SIZE;
 
         let mut length_regulated_vector_array = NdArray::new(
@@ -446,9 +460,35 @@ impl InferenceCore {
                 .into_shape([1, new_length, Status::HIDDEN_SIZE])
                 .unwrap(),
         );
+        let mut length_regulated_pitch_vector_array;
 
-        let decoder_input_tensors: Vec<&mut dyn AnyArray> =
-            vec![&mut length_regulated_vector_array];
+        let decoder_input_tensors: Vec<&mut dyn AnyArray> = match synthesis_system {
+            SynthesisSystem::V1 => {
+                vec![&mut length_regulated_vector_array]
+            }
+            SynthesisSystem::V2 => {
+                let length_regulated_pitch_vector = status.length_regulator(
+                    phoneme_vector.len(),
+                    pitch_vector,
+                    duration_vector,
+                    93.75, // 48000 / 512 = 93.75
+                    1,
+                    1,
+                );
+
+                length_regulated_pitch_vector_array = NdArray::new(
+                    ndarray::arr1(length_regulated_pitch_vector.as_slice())
+                        .into_shape([1, new_length])
+                        .unwrap(),
+                );
+
+                vec![
+                    &mut length_regulated_vector_array,
+                    &mut length_regulated_pitch_vector_array,
+                    &mut speaker_id_array,
+                ]
+            }
+        };
 
         status.decoder_session_run(&library_uuid, decoder_input_tensors)
     }
@@ -495,9 +535,6 @@ pub const fn error_result_to_message(result_code: SharevoxResultCode) -> &'stati
         SHAREVOX_RESULT_LOAD_LIBRARIES_ERROR => "libraries.jsonの読み込みに失敗しました\0",
         SHAREVOX_RESULT_LOAD_MODEL_CONFIG_ERROR => "model_config.jsonの読み込みに失敗しました\0",
         SHAREVOX_RESULT_INVALID_LIBRARY_UUID_ERROR => "無効なlibrary_uuidです\0",
-        SHAREVOX_RESULT_INVALID_LENGTH_REGULATOR_ERROR => {
-            "model_config.jsonのlength_regulatorが無効です\0"
-        }
     }
 }
 

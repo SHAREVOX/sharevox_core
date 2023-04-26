@@ -17,7 +17,7 @@ derive-new = "0.5.9"
 easy-ext.workspace = true
 fs-err.workspace = true
 once_cell.workspace = true
-onnxruntime = { git = "https://github.com/VOICEVOX/onnxruntime-rs.git", rev="405f62fb53df1b59b0e69adafbd1c28e4d5c2787" }
+onnxruntime = { git = "https://github.com/SHAREVOX/onnxruntime-rs.git", rev="a74d8b4ed5a6675b01a9e6f2945fdf92c40d78af" }
 process_path = "0.1.4"
 serde.workspace = true
 serde_json.workspace = true
