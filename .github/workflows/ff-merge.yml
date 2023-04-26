@@ -1,0 +1,35 @@
+# PRに手動で`ff-merge`というラベルを付けると、このworkflowが起動して`--ff-only`なマージが行われる。
+#
+# VOICEVOX/voicevox_coreの変更を、CIのチェックとレビューを通してかつ単純なコミットログの状態で取り込むことが目的。
+# VOICEVOX/voicevox_coreの`main`を`git merge`したものをPRとして出し、それをこのworkflowでSHAREVOXの`main`に取り込む。
+
+name: FF merge
+on:
+  pull_request:
+    types:
+      - labeled
+
+jobs:
+  merge-upstream:
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'ff-merge'
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+          submodules: true
+
+      - name: FF merge
+        shell: bash
+        run: |
+          # https://github.com/robotology/gh-action-nightly-merge/pull/13
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+          git remote add target "https://x-access-token:${GITHUB_TOKEN}@github.com/$GITHUB_REPOSITORY.git"
+
+          git fetch origin ${{ github.event.pull_request.head.sha }}
+          git merge --ff-only ${{ github.event.pull_request.head.sha }}
+          git push target main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
